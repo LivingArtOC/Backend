@@ -1,7 +1,7 @@
 package livart.common.domain.social.repository;
 
 import livart.common.domain.social.entity.SocialAPI;
-import livart.common.dto.enums.Provider;
+import livart.common.dto.enums.user.Provider;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

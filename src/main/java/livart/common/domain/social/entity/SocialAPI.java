@@ -3,7 +3,7 @@ package livart.common.domain.social.entity;
 
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
-import livart.common.dto.enums.Provider;
+import livart.common.dto.enums.user.Provider;
 import lombok.*;
 
 @Table(name = "social_api")
@@ -17,7 +17,7 @@ public class SocialAPI extends BaseTime {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private Provider provider;
 
     @Column(nullable = false)
@@ -26,12 +26,12 @@ public class SocialAPI extends BaseTime {
     @Column(nullable = false)
     private String clientSecret;
 
-    private Long adminId;
+    private Long updatedBy;
 
-    public void update(String clientId, String clientSecret, Long adminId) {
+    public void update(String clientId, String clientSecret, Long updatedBy) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.adminId = adminId;
+        this.updatedBy = updatedBy;
     }
 
 }

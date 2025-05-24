@@ -1,5 +1,6 @@
 package livart.shop.security.dto.response;
 
+import livart.common.dto.enums.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +16,6 @@ public class SignupResponse {
     private String loginId;
     private String userName;
     private String email;
-    private String role;
+    private Role role;
     private LocalDateTime createdAt;
 }

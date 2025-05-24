@@ -3,8 +3,8 @@ package livart.common.Auth.util;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import livart.common.dto.enums.Provider;
-import livart.common.dto.enums.Role;
+import livart.common.dto.enums.user.Provider;
+import livart.common.dto.enums.user.Role;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.Auth.JwtLoginProperties;
@@ -34,9 +34,9 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generate(String subject, Role role, Provider provider, Date expiredAt) {
+    public String generate(String loginId, Role role, Provider provider, Date expiredAt) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(loginId) // 로그인 아이디
                 .claim("role", role.name())
                 .claim("provider", provider.name())
                 .setIssuedAt(new Date())
@@ -45,8 +45,8 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String extractSubject(String accessToken) {
-        Claims claims = parseClaims(accessToken);
+    public String extractSubject(String token) {
+        Claims claims = parseClaims(token);
         return claims.getSubject();
     }
 

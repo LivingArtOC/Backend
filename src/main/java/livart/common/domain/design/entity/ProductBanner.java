@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
 import lombok.*;
 
-@Table(name = "product_banners")
+@Table(name = "product_banner")
 @Entity @Builder @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Table(name = "admin_action_logs")
+@Table(name = "admin_action_log")
 @Entity @Getter @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,8 +18,8 @@ public class AdminActionLog extends BaseTime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long adminId;         // 운영자 ID
-    private String adminLoginId;  // 운영자 아이디
+    private Long adminId;         // 운영자 ID(행위자)
+    private String adminLoginId;  // 운영자 아이디(행위자)
     private ActionType actionType;    // GET , UPDATE, DELETE
     private String page;          // 요청 URI
     private String targetTable;   // 예: "user", "admin"

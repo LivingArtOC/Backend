@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface OtpLogRepository extends JpaRepository<OtpLog,Long> {
-    Optional<OtpLog> findTopByPhoneAndStatusOrderBySentAtDesc(String phoneNum, OtpStatus status);
+    Optional<OtpLog> findTopByPhoneNumAndStatusOrderBySentAtDesc(String phoneNum, OtpStatus status);
 }

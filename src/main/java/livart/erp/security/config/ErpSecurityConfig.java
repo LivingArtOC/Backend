@@ -69,7 +69,9 @@ public class ErpSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/erp/auth/**",
+                                "api/erp/sms/**",
+                                "/api/erp/auth/login/**",
+                                "/api/erp/auth/refresh",
                                 "/api/erp/client/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
@@ -95,7 +97,7 @@ public class ErpSecurityConfig {
     public AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder); // ✅ 여기서 진짜로 bcrypt 설정
+        provider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(provider);
     }
 

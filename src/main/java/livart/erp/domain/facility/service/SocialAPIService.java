@@ -3,8 +3,7 @@ package livart.erp.domain.facility.service;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.social.entity.SocialAPI;
 import livart.common.domain.social.repository.SocialAPIRepository;
-import livart.common.domain.user.entity.Admin;
-import livart.common.dto.enums.Provider;
+import livart.common.dto.enums.user.Provider;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.service.GlobalService;
@@ -25,10 +24,20 @@ public class SocialAPIService {
 
     @Transactional
     public SocialResponse updateSetting(CustomUserDetails customUserDetails, SocialRequest request){
-        globalService.findUser(customUserDetails);
+        globalService.validateAdmin(customUserDetails);
 
-        SocialAPI socialAPI = socialAPIRepository.findByProvider(request.getProvider())
-                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        String prov = request.getProvider().toUpperCase();
+
+        if (!Provider.containSocial(prov) ||
+                prov.equals(Provider.ALL.name()) ||
+                prov.equals(Provider.LOCAL.name())) {
+            throw new CustomException(ErrorCode.INVALID_SOCIAL_PROVIDER);
+        }
+
+        Provider provider = Provider.valueOf(prov.toUpperCase());
+
+        SocialAPI socialAPI = socialAPIRepository.findByProvider(provider)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
 
         socialAPI.update(request.getClientId(), request.getClientSecret(), customUserDetails.getId());
         SocialAPI saved = socialAPIRepository.save(socialAPI);
@@ -37,23 +46,29 @@ public class SocialAPIService {
                 .provider(saved.getProvider())
                 .clientId(saved.getClientId())
                 .clientSecret(saved.getClientSecret())
-                .adminId(saved.getAdminId())
-                .updatedAt(saved.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
     }
 
-    public SocialResponse getSetting(CustomUserDetails customUserDetails, String provider){
-        globalService.findUser(customUserDetails);
+    public SocialResponse getSetting(CustomUserDetails customUserDetails, String pr){
+        globalService.validateAdmin(customUserDetails);
 
-        SocialAPI socialAPI = socialAPIRepository.findByProvider(Provider.valueOf(provider))
-                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        String prov = pr.toUpperCase();
+
+        if (!Provider.containSocial(prov) ||
+                prov.equals(Provider.ALL.name()) ||
+                prov.equals(Provider.LOCAL.name())) {
+            throw new CustomException(ErrorCode.INVALID_SOCIAL_PROVIDER);
+        }
+
+        Provider provider = Provider.valueOf(prov.toUpperCase());
+
+        SocialAPI socialAPI = socialAPIRepository.findByProvider(provider)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
 
         return SocialResponse.builder()
                 .provider(socialAPI.getProvider())
                 .clientId(socialAPI.getClientId())
                 .clientSecret(socialAPI.getClientSecret())
-                .adminId(socialAPI.getAdminId())
-                .updatedAt(socialAPI.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
     }
 }

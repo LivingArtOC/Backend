@@ -1,21 +1,35 @@
 package livart.erp.domain.design;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.design.entity.*;
 import livart.common.domain.design.repository.*;
+import livart.common.domain.setting.entity.OperatingHours;
+import livart.common.domain.setting.repository.OperatingHoursRepository;
+import livart.common.dto.enums.defaultSetting.DayType;
+import livart.common.dto.enums.defaultSetting.OperatingHoursType;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
-import livart.common.dto.enums.PopupStatus;
+import livart.common.dto.enums.design.PopupStatus;
+import livart.erp.domain.defaultSetting.admin.dto.response.AdminSearchResponse;
+import livart.erp.domain.defaultSetting.policy.dto.request.CompanyInfoRequest;
+import livart.erp.domain.defaultSetting.policy.dto.response.CompanyInfoResponse;
 import livart.erp.domain.design.dto.request.*;
 import livart.erp.domain.design.dto.response.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.*;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +42,8 @@ public class DesignService {
     private final InteriorsInfoRepository interiorsInfoRepository;
     private final InteriorsImageRepository interiorsImageRepository;
     private final MainBannerRepository mainBannerRepository;
+    private final OperatingHoursRepository operatingHoursRepository;
+    private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional
     public BrandResponse saveBrandInfo(CustomUserDetails customUserDetails, BrandRequest request){
@@ -49,7 +65,6 @@ public class DesignService {
         return BrandResponse.builder()
                 .fileName(request.getFileName())
                 .imageUrl(saved.getImageUrl())
-                .updatedBy(saved.getUpdatedBy())
                 .build();
     }
 
@@ -61,7 +76,6 @@ public class DesignService {
         return BrandResponse.builder()
                 .fileName(brand.getFileName())
                 .imageUrl(brand.getImageUrl())
-                .updatedBy(brand.getUpdatedBy())
                 .build();
     }
 
@@ -69,7 +83,7 @@ public class DesignService {
     public List<ProductBannerResponse> saveProductBannerInfo(CustomUserDetails customUserDetails, List<ImageListDto> request){
         globalService.validateAdmin(customUserDetails);
 
-        brandRepository.deleteAll();
+        productBannerRepository.deleteAll();
 
         checkDuplicate(request);
 
@@ -89,8 +103,6 @@ public class DesignService {
                         .orderIndex(banner.getOrderIndex())
                         .build()
                 ).collect(Collectors.toList());
-
-
 
         return savedList;
     }
@@ -126,8 +138,8 @@ public class DesignService {
                 .pageUrl(request.getPageUrl())
                 .parameter(request.getParameter())
                 .createdUserId(customUserDetails.getId())
-                .exposedStartDate(request.getStart().toInstant(ZoneOffset.UTC))
-                .exposedEndDate(request.getEnd().toInstant(ZoneOffset.UTC))
+                .exposedStartDate(request.getStart())
+                .exposedEndDate(request.getEnd())
                 .build();
 
         Popup saved = popupRepository.save(popup);
@@ -197,44 +209,83 @@ public class DesignService {
                 .build();
     }
 
-    public SearchResult<PopupResponse> searchPopupList(CustomUserDetails customUserDetails, PopupSearchRequest request){
+    public SearchResult<PopupResponse> searchPopupList(CustomUserDetails customUserDetails, PopupSearchRequest request, Pageable pageable){
         globalService.validateAdmin(customUserDetails);
 
-        LocalDateTime startDateTime = request.getStartDate().atStartOfDay();
-        LocalDateTime endDateTime = request.getEndDate().atTime(LocalTime.MAX);
+        QPopup popup = QPopup.popup;
+        BooleanBuilder builder = new BooleanBuilder();
 
-        Instant startInstant = startDateTime.atZone(ZoneId.of("Asia/Seoul")).toInstant(); // 2024-04-19T15:00:00Z
-        Instant endInstant = endDateTime.atZone(ZoneId.of("Asia/Seoul")).toInstant();
+        if(StringUtils.hasText(request.getKeyword()) && request.getKey() != null){
+            switch (request.getKey()){
+                case TITLE -> builder.and(popup.title.containsIgnoreCase(request.getKeyword()));
+                case ALL -> {
+                    BooleanBuilder keywordBuilder = new BooleanBuilder();
+                    keywordBuilder.or(popup.title.containsIgnoreCase(request.getKeyword()));
+                    keywordBuilder.or(popup.parameter.containsIgnoreCase(request.getKeyword()));
+                    builder.and(keywordBuilder);
+                }
+            }
+        }
 
-        List<PopupResponse> popupList = popupRepository
-                .findPopupsByTitleAndTypeAndExposure(request.getTitle(),request.getStatus(), request.getType(), startInstant, endInstant)
-                .stream()
-                .map(popup -> PopupResponse.builder()
-                        .popupId(popup.getId())
-                        .title(popup.getTitle())
-                        .status(popup.getStatus())
-                        .popupType(popup.getPopupType())
-                        .topLocationPixel(popup.getTopLocationPixel())
-                        .leftLocationPixel(popup.getLeftLocationPixel())
-                        .isHiddenToday(popup.getIsHiddenToday())
-                        .widthPixel(popup.getWidthPixel())
-                        .heightPixel(popup.getHeightPixel())
-                        .pageUrl(popup.getPageUrl())
-                        .parameter(popup.getParameter())
-                        .exposedStartDate(popup.getExposedStartDate().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                        .exposedEndDate(popup.getExposedEndDate().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                        .build()
+        if(request.getRegisterDate() != null){
+            if(request.getRegisterDate().getStartDate() != null){
+                builder.and(popup.createdAt.goe(request.getRegisterDate().getStartDate().atStartOfDay()));
+            }
+            if(request.getRegisterDate().getEndDate() != null){
+                builder.and(popup.createdAt.loe(request.getRegisterDate().getEndDate().atTime(23,59,59)));
+            }
+        }
+
+        if(request.getStatus() != null){
+            builder.and(popup.status.eq(request.getStatus()));
+        }
+
+        if(request.getType() != null){
+            builder.and(popup.popupType.eq(request.getType()));
+        }
+
+        List<Popup> popupList = jpaQueryFactory
+                .selectFrom(popup)
+                .where(builder)
+                .orderBy(popup.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        long totalCount = jpaQueryFactory
+                .select(popup.count())
+                .from(popup)
+                .where(builder)
+                .fetchOne();
+
+        List<PopupResponse> results = popupList.stream()
+                .map(p -> PopupResponse.builder()
+                            .popupId(p.getId())
+                            .title(p.getTitle())
+                            .status(p.getStatus())
+                            .popupType(p.getPopupType())
+                            .topLocationPixel(p.getTopLocationPixel())
+                            .leftLocationPixel(p.getLeftLocationPixel())
+                            .isHiddenToday(p.getIsHiddenToday())
+                            .widthPixel(p.getWidthPixel())
+                            .heightPixel(p.getHeightPixel())
+                            .pageUrl(p.getPageUrl())
+                            .parameter(p.getParameter())
+                            .createdAt(p.getCreatedAt().toLocalDate())
+                            .updatedAt(p.getUpdatedAt().toLocalDate())
+                            .exposedStartDate(p.getExposedStartDate())
+                            .exposedEndDate(p.getExposedEndDate())
+                            .build()
                 ).collect(Collectors.toList());
 
-        Long fullCount = popupRepository.count();
-        Long totalCount = (long) popupList.size();
-
         return SearchResult.<PopupResponse>builder()
-                .fullCount(fullCount)
                 .totalCount(totalCount)
-                .data(popupList)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .data(results)
                 .build();
     }
+
 
     @Transactional
     public List<PopupDeleteResponse> deletePopupList(CustomUserDetails customUserDetails, List<Long> popupIdList){
@@ -267,21 +318,46 @@ public class DesignService {
                 .map(existing -> {
                     existing.update(
                             request.getEmail(),
-                            request.getPaxNum(),
+                            request.getFaxNum(),
                             request.getDirections(),
                             request.getUsageGuide(),
-                            request.getOperatingHours(),
                             customUserDetails.getId());
                     return existing;
                 })
                 .orElseGet(() -> InteriorsInfo.builder()
                         .email(request.getEmail())
-                        .paxNum(request.getPaxNum())
+                        .faxNum(request.getFaxNum())
                         .directions(request.getDirections())
                         .usageGuide(request.getUsageGuide())
-                        .operatingHours(request.getOperatingHours())
                         .createdBy(customUserDetails.getId())
                         .build());
+
+        operatingHoursRepository.deleteByOperatingHoursType(OperatingHoursType.INTERIOR_INFO);
+
+        List<OperatingHours> operatingHours = request.getHours().entrySet().stream()
+                .map(entry -> {
+                    DayType dayType = entry.getKey();
+                    InteriorInfoRequest.TimeRange timeRange = entry.getValue();
+
+                    return OperatingHours.builder()
+                            .operatingHoursType(OperatingHoursType.INTERIOR_INFO)
+                            .dayType(dayType)
+                            .startTime(timeRange.getStart())
+                            .endTime(timeRange.getEnd())
+                            .updatedBy(customUserDetails.getId())
+                            .build();
+                }).collect(Collectors.toList());
+
+        Map<DayType, InteriorInfoResponse.TimeRange> hours = operatingHoursRepository.saveAll(operatingHours).stream()
+                .collect(Collectors.toMap(
+                        OperatingHours::getDayType,
+                        bh -> InteriorInfoResponse.TimeRange.builder()
+                                .start(bh.getStartTime())
+                                .end(bh.getEndTime())
+                                .build(),
+                        (existing, replacement) -> existing, // 중복 방지
+                        () -> new EnumMap<>(DayType.class)
+                ));
 
         InteriorsInfo savedInfo = interiorsInfoRepository.save(info);
 
@@ -296,7 +372,8 @@ public class DesignService {
                         .imageUrl(dto.getImageUrl())
                         .orderIndex(dto.getOrderIndex())
                         .createdBy(customUserDetails.getId())
-                        .build()).collect(Collectors.toList());
+                        .build()
+                ).collect(Collectors.toList());
 
         List<InteriorsImage> savedImage = interiorsImageRepository.saveAll(imageList);
 
@@ -305,14 +382,15 @@ public class DesignService {
                         .fileName(image.getFileName())
                         .imageUrl(image.getImageUrl())
                         .orderIndex(image.getOrderIndex())
-                        .build()).collect(Collectors.toList());
+                        .build()
+                ).collect(Collectors.toList());
 
         return InteriorInfoResponse.builder()
                 .email(savedInfo.getEmail())
-                .paxNum(savedInfo.getPaxNum())
+                .paxNum(savedInfo.getFaxNum())
                 .directions(savedInfo.getDirections())
                 .usageGuide(savedInfo.getUsageGuide())
-                .operatingHours(savedInfo.getOperatingHours())
+                .hours(hours)
                 .imageList(imageLists)
                 .build();
 
@@ -331,12 +409,23 @@ public class DesignService {
                         .orderIndex(image.getOrderIndex())
                         .build()).collect(Collectors.toList());
 
+        Map<DayType, InteriorInfoResponse.TimeRange> hours = operatingHoursRepository.findByOperatingHoursType(OperatingHoursType.INTERIOR_INFO).stream()
+                .collect(Collectors.toMap(
+                        OperatingHours::getDayType,
+                        bh -> InteriorInfoResponse.TimeRange.builder()
+                                .start(bh.getStartTime())
+                                .end(bh.getEndTime())
+                                .build(),
+                        (existing, replacement) -> existing, // 중복 방지
+                        () -> new EnumMap<>(DayType.class)
+                ));
+
         return InteriorInfoResponse.builder()
                 .email(info.getEmail())
-                .paxNum(info.getPaxNum())
+                .paxNum(info.getFaxNum())
                 .directions(info.getDirections())
                 .usageGuide(info.getUsageGuide())
-                .operatingHours(info.getOperatingHours())
+                .hours(hours)
                 .imageList(imageLists)
                 .build();
     }

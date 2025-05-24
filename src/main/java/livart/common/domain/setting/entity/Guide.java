@@ -2,10 +2,14 @@ package livart.common.domain.setting.entity;
 
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
+import livart.common.dto.enums.defaultSetting.GuideType;
 import lombok.*;
 
-@Table(name = "service_guides")
-@Getter @Builder(toBuilder = true) @Entity
+import java.util.ArrayList;
+import java.util.List;
+
+@Table(name = "guide")
+@Getter @Builder @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Guide extends BaseTime {
@@ -13,20 +17,21 @@ public class Guide extends BaseTime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
+    @Column(unique = true)
+    @Enumerated(EnumType.STRING)
+    private GuideType type;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
     private String content;
-    private String imageUrl;
     private Long updateBy;
 
-    public void updateContent(String content) {
+    @Builder.Default
+    @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GuideImage> guideImages = new ArrayList<>();
+
+    public void updateContent(String content, Long updateBy) {
         this.content = content;
+        this.updateBy = updateBy;
     }
 
-    public void update(String imageUrl, String content){
-        this.imageUrl = imageUrl;
-        this.content = content;
-    }
 }

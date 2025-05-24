@@ -3,7 +3,6 @@ package livart.erp.domain.facility.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import livart.common.Auth.CustomUserDetails;
-import livart.common.dto.enums.Provider;
 import livart.common.dto.response.ApiResponse;
 import livart.erp.domain.facility.dto.request.SocialRequest;
 import livart.erp.domain.facility.dto.response.SocialResponse;
@@ -20,21 +19,21 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin("*")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "소셜 앱 등록 관련 API")
+@Tag(name = "부가서비스 - 소셜 로그인 설정 관련 API", description = "✅ 개발 완료")
 public class SocialAPIController {
 
     private final SocialAPIService socialAPIService;
 
     @PutMapping("/social-api")
-    @Operation(summary = "소셜 앱 설정 수정 API", description = "토큰 O")
+    @Operation(summary = "✅ 소셜 로그인 설정 수정 API", description = "토큰 O")
     public ResponseEntity<ApiResponse<SocialResponse>> updateSetting(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                   @RequestBody SocialRequest socialRequest){
         SocialResponse response = socialAPIService.updateSetting(customUserDetails, socialRequest);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(response));
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @GetMapping("/{provider}")
-    @Operation(summary = "소셜 앱 설정 조회 API", description = "토큰 O")
+    @Operation(summary = "✅ 소셜 로그인 설정 조회 API", description = "토큰 O")
     public ResponseEntity<ApiResponse<SocialResponse>> getSocialSetting(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                         @PathVariable String provider){
         SocialResponse response = socialAPIService.getSetting(customUserDetails, provider);

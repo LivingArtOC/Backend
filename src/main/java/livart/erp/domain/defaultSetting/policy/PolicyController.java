@@ -23,75 +23,51 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "회사 정보 및 약관 정책 설정 관련 API")
+@Tag(name = "기본 설정 - 기본 정책 설정 관련 API", description = "✅ 개발 완료")
 @RequestMapping("api/erp/setting/policy")
 public class PolicyController {
 
     private final PolicyService policyService;
 
-    @PostMapping("/company")
-    @Operation(summary = "회사 정보 저장 API, 토큰 O")
-    public ResponseEntity<ApiResponse<CompanyInfoResponse>> saveDefault(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                        @RequestBody CompanyInfoRequest request){
-        CompanyInfoResponse response = policyService.saveDefault(customUserDetails, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
-    }
-
     @GetMapping("/company")
-    @Operation(summary = "회사 정보 조회 API, 토큰 O")
+    @Operation(summary = "✅ 회사 정보 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<CompanyInfoResponse>> getDefault(@AuthenticationPrincipal CustomUserDetails customUserDetails){
         CompanyInfoResponse response = policyService.getDefault(customUserDetails);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PutMapping("/company")
-    @Operation(summary = "회사 정보 수정 API, 토큰 O")
+    @Operation(summary = "✅ 회사 정보 저장 & 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<CompanyInfoResponse>> updateDefault(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                         @RequestBody CompanyInfoRequest request){
         CompanyInfoResponse response = policyService.updateDefault(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PostMapping("/use")
-    @Operation(summary = "이용 약관 저장 API, 토큰 O")
-    public ResponseEntity<ApiResponse<UsePolicyResponse>> saveUsePolicy(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                      @RequestBody UsePolicyRequest request){
-        UsePolicyResponse response = policyService.saveUsePolicy(customUserDetails, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
-    }
-
-    @GetMapping("/use")
-    @Operation(summary = "이용 약관 조회 API, 토큰 O")
+    @GetMapping("/use-policy")
+    @Operation(summary = "✅ 이용 약관 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<UsePolicyResponse>> getUsePolicy(@AuthenticationPrincipal CustomUserDetails customUserDetails){
         UsePolicyResponse response = policyService.getUsePolicy(customUserDetails);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PutMapping("/use")
-    @Operation(summary = "이용 약관 수정 API, 토큰 O")
+    @PutMapping("/use-policy")
+    @Operation(summary = "✅ 이용 약관 저장 & 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<UsePolicyResponse>> updateUsePolicy(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                           @RequestBody UsePolicyRequest request){
         UsePolicyResponse response = policyService.updateUsePolicy(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PostMapping("/course")
-    @Operation(summary = "개인정보 처리방침 저장 API, 토큰 O")
-    public ResponseEntity<ApiResponse<CourseResponse>> saveCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                        @RequestBody CourseRequest request){
-        CourseResponse response = policyService.saveCourse(customUserDetails, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
-    }
-
     @GetMapping("/course")
-    @Operation(summary = "개인정보 처리방침 조회 API, 토큰 O")
+    @Operation(summary = "✅ 개인정보 처리방침 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<CourseResponse>> getCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails){
         CourseResponse response = policyService.getCourse(customUserDetails);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PutMapping("/course")
-    @Operation(summary = "개인정보 처리방침 수정 API, 토큰 O")
+    @Operation(summary = "✅ 개인정보 처리방침 저장 & 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<CourseResponse>> updateCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                           @RequestBody CourseRequest request){
         CourseResponse response = policyService.updateCourse(customUserDetails, request);
@@ -99,18 +75,17 @@ public class PolicyController {
     }
 
     @GetMapping("/others")
-    @Operation(summary = "나머지 약관 조회 API, 토큰 O")
-    public ResponseEntity<ApiResponse<List<TermsResponse>>> getTerms(@AuthenticationPrincipal CustomUserDetails customUserDetails){
-        List<TermsResponse> response = policyService.getTerms(customUserDetails);
+    @Operation(summary = "✅ 나머지 약관 일괄 조회 API, 토큰 O")
+    public ResponseEntity<ApiResponse<List<TermsResponse>>> getTerm(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        List<TermsResponse> response = policyService.getTerm(customUserDetails);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PutMapping("/{termId}")
-    @Operation(summary = "특정 약관 수정 API, 토큰 O")
+    @PutMapping("/others")
+    @Operation(summary = "✅ 나머지 약관 개별 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<TermsResponse>> updateTerm(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                    @RequestBody TermsRequest request,
-                                                                  @PathVariable Long termId){
-        TermsResponse response = policyService.updateTerm(customUserDetails, request, termId);
+                                                                    @RequestBody TermsRequest request){
+        TermsResponse response = policyService.updateTerm(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

@@ -1,11 +1,10 @@
 package livart.common.service;
 
 import livart.common.Auth.CustomUserDetails;
-import livart.common.domain.user.entity.Admin;
 import livart.common.domain.user.entity.User;
 import livart.common.domain.user.repository.UserRepository;
 import livart.common.dto.enums.ActionType;
-import livart.common.dto.enums.Role;
+import livart.common.dto.enums.user.Role;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.log.entity.AdminActionLog;
@@ -33,8 +32,8 @@ public class GlobalService {
         User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED_USER);
+        if (user.getRole() != Role.ADMIN && user.getRole() != Role.SUPER_ADMIN) {
+            throw new CustomException(ErrorCode.ADMIN_ACCESS_DENIED);
         }
 
         return user;

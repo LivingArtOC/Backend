@@ -2,6 +2,8 @@ package livart.common.client.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import livart.common.exception.CustomException;
+import livart.common.exception.ErrorCode;
 import livart.erp.client.s3.UploadResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +23,7 @@ public class S3Uploader {
     private String bucket;
 
     public UploadResult upload(MultipartFile file, String dirName) throws IOException {
-        String originalFilename = file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename().replaceAll(" ", "_");
         String uuid = UUID.randomUUID().toString();
         String fileName = dirName + "/" + uuid + "_" + originalFilename;
 
@@ -33,5 +35,20 @@ public class S3Uploader {
         String url = amazonS3.getUrl(bucket, fileName).toString();
 
         return new UploadResult(url, originalFilename);
+    }
+
+    public void validateImage(MultipartFile file) {
+        // 50MB 제한
+        long maxSize = 50 * 1024 * 1024;
+        if (file.getSize() > maxSize) {
+            throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED);
+        }
+
+        // jpg/jpeg 여부 확인
+        String contentType = file.getContentType();
+        if (contentType == null ||
+                !(contentType.equalsIgnoreCase("image/jpeg") || contentType.equalsIgnoreCase("image/jpg"))) {
+            throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
+        }
     }
 }

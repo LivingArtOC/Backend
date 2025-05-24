@@ -10,25 +10,24 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class InteriorsInfo extends BaseTime {
     @Id
+    @Builder.Default
     private Long id = 1L;
     private String email;
-    private String paxNum;
+    private String faxNum;
 
     @Lob
     private String directions;
     @Lob
     private String usageGuide;
-    @Lob
-    private String operatingHours;
+
     private Long createdBy;
     private Long updatedBy;
 
-    public  void update(String email, String paxNum, String directions, String usageGuide, String operatingHours,Long updatedBy){
+    public  void update(String email, String faxNum, String directions, String usageGuide, Long updatedBy){
         this.email = email;
-        this.paxNum = paxNum;
+        this.faxNum = faxNum;
         this.directions = directions;
         this.usageGuide = usageGuide;
-        this.operatingHours = operatingHours;
         this.updatedBy = updatedBy;
     }
 }

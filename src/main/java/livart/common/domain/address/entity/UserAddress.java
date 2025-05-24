@@ -3,6 +3,7 @@ package livart.common.domain.address.entity;
 
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
+import livart.common.domain.promotion.entity.Coupon;
 import livart.common.domain.user.entity.User;
 import lombok.*;
 
@@ -29,4 +30,5 @@ public class UserAddress extends BaseTime {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 }

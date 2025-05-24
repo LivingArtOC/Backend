@@ -6,8 +6,9 @@ import livart.common.dto.enums.OtpStatus;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
-@Table(name = "otp_logs")
+@Table(name = "otp_log")
 @Entity @Builder @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -17,9 +18,8 @@ public class OtpLog extends BaseTime {
     private Long id;
 
     private String phoneNum;
-    private Long userId;
     private String otpCode;
-    private Instant sentAt;
+    private LocalDateTime sentAt;
 
     @Enumerated(EnumType.STRING)
     private OtpStatus status;

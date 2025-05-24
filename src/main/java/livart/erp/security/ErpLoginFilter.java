@@ -10,20 +10,21 @@ import livart.common.Auth.RefreshToken;
 import livart.common.Auth.dto.request.LoginRequest;
 import livart.common.Auth.repository.RefreshTokenRepository;
 import livart.common.Auth.util.JwtTokenProvider;
-import livart.common.domain.setting.entity.AllowedAdminIps;
+import livart.common.domain.setting.entity.AllowedAdminIp;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
 import livart.common.domain.user.entity.Admin;
 import livart.common.domain.user.entity.User;
 import livart.common.domain.user.repository.AdminRepository;
 import livart.common.domain.user.repository.UserRepository;
-import livart.common.dto.enums.Role;
-import livart.common.dto.enums.UserStatus;
+import livart.common.dto.enums.user.Role;
+import livart.common.dto.enums.user.UserStatus;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.log.entity.LoginHistory;
 import livart.common.log.repository.LoginHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -32,9 +33,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 
@@ -100,11 +99,11 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
 
             String clientIp = getClientIp(request);
 
-            List<AllowedAdminIps> allowedAdminIpsList = allowedAdminIpsRepository.findByAdminId(user.getId());
+            List<AllowedAdminIp> allowedAdminIpList = allowedAdminIpsRepository.findByAdminId(user.getId());
 
-            if (!allowedAdminIpsList.isEmpty()){
-                boolean isAllowed = allowedAdminIpsList.stream()
-                        .anyMatch(allowed -> allowed.getIpAddress().equals(clientIp));
+            if (!allowedAdminIpList.isEmpty()){
+                boolean isAllowed = allowedAdminIpList.stream()
+                        .anyMatch(allowed -> allowed.getIpAddress().contains(clientIp));
                 if (isAllowed != true){
                     throw new CustomException(ErrorCode.ACCESS_DENIED_BY_IP);
                 }
@@ -117,6 +116,10 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
 
             return authenticationManager.authenticate(authToken);
 
+        }  catch (CustomException e) {
+            // 🔥 실패 로그 수동 기록
+            saveLoginFailure(request, e.getMessage(), getLoginIdFromRequest(request));
+            throw new BadCredentialsException(e.getMessage()); // Spring Security에 알리기 위한 예외 변환
         } catch (IOException e) {
             log.error("로그인 요청 처리 실패", e);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -180,7 +183,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .success(true)
                 .failReason(null)
                 .site("ERP")
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
 
     }
@@ -205,22 +208,52 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .success(false)
                 .site("ERP")
                 .failReason(failed.getMessage()) // ex: Bad credentials, User not found
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
     }
 
-    public String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
+    private String getClientIp(HttpServletRequest request) {
+        String[] headerNames = {
+                "X-Forwarded-For",
+                "Proxy-Client-IP",
+                "WL-Proxy-Client-IP",
+                "HTTP_CLIENT_IP",
+                "HTTP_X_FORWARDED_FOR"
+        };
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // X-Forwarded-For: "clientIP, proxy1, proxy2" → 맨 앞 IP가 진짜
+                return ip.split(",")[0].trim();
+            }
         }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
+
+        return request.getRemoteAddr();
     }
+
+    private void saveLoginFailure(HttpServletRequest request, String reason, String loginId) {
+        loginHistoryRepository.save(LoginHistory.builder()
+                .loginId(loginId != null ? loginId : "(unknown)")
+                .userId(null)
+                .ipAddress(getClientIp(request))
+                .userAgent(request.getHeader("User-Agent"))
+                .success(false)
+                .failReason(reason)
+                .site("ERP")
+                .createdAt(LocalDateTime.now())
+                .build());
+    }
+
+    private String getLoginIdFromRequest(HttpServletRequest request) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
+            return loginRequest.getLoginId();
+        } catch (Exception e) {
+            return "(unknown)";
+        }
+    }
+
 }
 

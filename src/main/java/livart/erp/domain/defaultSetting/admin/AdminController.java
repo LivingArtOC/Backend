@@ -2,6 +2,7 @@ package livart.erp.domain.defaultSetting.admin;
 
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import livart.common.Auth.CustomUserDetails;
@@ -29,7 +30,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "ADMIN + 관리 정책 설정 관련 API")
+@Tag(name = "기본 설정 - 관리 정책 설정 관련 API", description = "✅ 개발 완료")
 @RequestMapping("api/erp/setting/admin")
 public class AdminController {
 
@@ -37,7 +38,7 @@ public class AdminController {
     private final GlobalService globalService;
 
     @PostMapping("/register")
-    @Operation(summary = "운영자 등록 API, 토큰 O")
+    @Operation(summary = "✅ 운영자 등록 API, 토큰 O")
     public ResponseEntity<ApiResponse<AdminResponse>> createAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                   @RequestBody AdminRequest request){
         AdminResponse response = adminService.createAdmin(customUserDetails, request);
@@ -45,7 +46,7 @@ public class AdminController {
     }
 
     @GetMapping("/{adminId}")
-    @Operation(summary = "운영자 세부 정보 조회 API, 토큰 O")
+    @Operation(summary = "✅ 운영자 세부 정보 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<AdminResponse>> getAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                @PathVariable Long adminId,
                                                                HttpServletRequest httpServletRequest){
@@ -63,7 +64,7 @@ public class AdminController {
     }
 
     @PutMapping("/{adminId}")
-    @Operation(summary = "운영자 세부 정보 수정 API, 토큰 O")
+    @Operation(summary = "✅ 운영자 세부 정보 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<AdminResponse>> updateAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                   @RequestBody AdminRequest request,
                                                                   @PathVariable Long adminId,
@@ -84,24 +85,26 @@ public class AdminController {
     }
 
     @GetMapping("/validate")
-    @Operation(summary = "관리자 전용 아이디 중복 확인 API, 토큰 O")
-    public ResponseEntity<ApiResponse<String>> checkLoginId(@AuthenticationPrincipal CustomUserDetails customUserDetails, @ModelAttribute ValidateLoginIdRequest request) {
-        adminService.validateLoginId(customUserDetails, request.getLoginId());
+    @Operation(summary = "✅ 관리자 전용 아이디 중복 확인 API, 토큰 O")
+    public ResponseEntity<ApiResponse<String>> checkLoginId(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                            @RequestParam(name = "id") String loginId) {
+        adminService.validateLoginId(customUserDetails, loginId);
         return ResponseEntity.ok(ApiResponse.ok("사용 가능한 아이디입니다."));
     }
 
-    @GetMapping("/search")
-    @Operation(summary = "운영자 검색 API, 토큰 O")
+    @PostMapping("/search")
+    @Operation(summary = "✅ 운영자 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<AdminSearchResponse>>> getAdminList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @ModelAttribute AdminSearchRequest request,
-            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable){
+            @RequestBody AdminSearchRequest request,
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC)
+            @Parameter(hidden = true) Pageable pageable){
         SearchResult<AdminSearchResponse> responseList = adminService.getAdminList(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(responseList));
     }
 
     @PutMapping("/delete")
-    @Operation(summary = "선택된 운영자들 삭제 상태 처리 API, 토큰 O")
+    @Operation(summary = "✅ 선택된 운영자들 삭제 상태 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<DelAdminResponse>>> deleteAdmins(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                      @RequestBody List<Long> adminIds){
         List<DelAdminResponse> response = adminService.deleteAdmins(customUserDetails, adminIds);
@@ -109,19 +112,20 @@ public class AdminController {
     }
 
     @PutMapping("/login-enabled")
-    @Operation(summary = "선택된 운영자들 로그인 제한 처리 API, 토큰 O")
+    @Operation(summary = "✅ 선택된 운영자들 로그인 제한 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<EnableLoginResponse>>> blockAdmins(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                               @RequestBody List<Long> adminIds){
         List<EnableLoginResponse> response = adminService.blockAdmins(customUserDetails, adminIds);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @GetMapping("/search/log")
-    @Operation(summary = "개인정보 접속 기록 조회 API, 토큰 O")
+    @PostMapping("/search/log")
+    @Operation(summary = "✅ 개인정보 접속 기록 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<UnifiedLogGroupResponse>> getLogList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @ModelAttribute AdminLogSearchRequest request,
-            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable){
+            @RequestBody AdminLogSearchRequest request,
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC)
+            @Parameter(hidden = true) Pageable pageable){
         UnifiedLogGroupResponse responseList = adminService.getLogList(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(responseList));
     }

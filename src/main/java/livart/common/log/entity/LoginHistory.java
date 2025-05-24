@@ -1,12 +1,13 @@
 package livart.common.log.entity;
 
 import jakarta.persistence.*;
+import livart.common.domain.BaseTime;
 import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-@Table(name = "login_fail_log")
+@Table(name = "login_history")
 @Entity @Builder @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -23,5 +24,5 @@ public class LoginHistory {
     private String userAgent;
     private String failReason;
     private String ipAddress;
-    private Instant attemptedAt;
+    private LocalDateTime createdAt;
 }

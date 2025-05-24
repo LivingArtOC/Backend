@@ -15,13 +15,13 @@ public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long
     SELECT l FROM LoginHistory l
     WHERE LOWER(l.loginId) LIKE LOWER(CONCAT('%', :loginId, '%'))
       AND l.success = :success
-      AND l.attemptedAt BETWEEN :start AND :end
+      AND l.createdAt BETWEEN :start AND :end
 """)
     Page<LoginHistory> findByLoginIdLikeAndSuccessAndLoginAtBetween(
             @Param("loginId") String loginId,
             @Param("success") boolean success,
-            @Param("start") Instant start,
-            @Param("end") Instant end,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
             Pageable pageable
     );
 

@@ -1,6 +1,6 @@
 package livart.erp.domain.design.dto.response;
 
-import livart.common.dto.enums.PopupStatus;
+import livart.common.dto.enums.design.PopupStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

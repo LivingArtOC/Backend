@@ -1,5 +1,8 @@
 package livart.common.client.biz;
 
+import livart.common.domain.user.entity.User;
+import livart.common.domain.user.repository.BusinessRepository;
+import livart.common.domain.user.repository.UserRepository;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -18,6 +22,7 @@ import java.util.List;
 public class BizCheckClient {
 
     private final RestTemplate restTemplate;
+    private final BusinessRepository businessRepository;
 
     @Value("${api.biz-check.key}")
     private String serviceKey;
@@ -25,6 +30,10 @@ public class BizCheckClient {
     private static final String API_URL = "https://api.odcloud.kr/api/nts-businessman/v1/status";
 
     public boolean isValidBizNumber(String bizNumber) {
+
+        businessRepository.findBusinessByBizRegistrationNum(bizNumber)
+                .ifPresent(u -> { throw new CustomException(ErrorCode.DUPLICATE_BIZ_NUM); });
+
         String url = API_URL + "?serviceKey=" + serviceKey;
 
         HttpHeaders headers = new HttpHeaders();

@@ -1,18 +1,20 @@
 package livart.erp.domain.defaultSetting.guide.dto.response;
 
+import livart.common.dto.enums.defaultSetting.GuideType;
+import livart.erp.domain.defaultSetting.guide.dto.request.ImageDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder(toBuilder = true) @Getter
+import java.util.List;
+
+@Builder @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class GuideResponse {
-
     private Long guideId;
-    private String title;
+    private GuideType type;
     private String content;
-    private String image_url;
-    private Long updateBy;
+    private List<ImageDto> imageList;
 }

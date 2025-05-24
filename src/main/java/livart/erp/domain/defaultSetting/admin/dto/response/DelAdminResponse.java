@@ -1,7 +1,7 @@
 package livart.erp.domain.defaultSetting.admin.dto.response;
 
-import livart.common.dto.enums.Role;
-import livart.common.dto.enums.UserStatus;
+import livart.common.dto.enums.user.Role;
+import livart.common.dto.enums.user.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

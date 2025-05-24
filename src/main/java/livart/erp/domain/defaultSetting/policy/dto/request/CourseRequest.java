@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class CourseRequest {
+    private Boolean isRequired;
     private String content;
     private String officerName; //보호 책임자 이름
     private String officerPosition; //보호 책임자 직책

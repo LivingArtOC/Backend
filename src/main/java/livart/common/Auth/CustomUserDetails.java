@@ -1,9 +1,10 @@
 package livart.common.Auth;
 
 import livart.common.domain.user.entity.User;
-import livart.common.dto.enums.Provider;
-import livart.common.dto.enums.Role;
+import livart.common.dto.enums.user.Provider;
+import livart.common.dto.enums.user.Role;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
+@Slf4j
 public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final User user;
@@ -52,12 +54,12 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getPassword() {
+        log.info("✅ getPassword()에서 반환하는 값: {}", user.getPassword());
         return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        // 로그인 방식에 따라 반환
         return user.getLoginId();
     }
 

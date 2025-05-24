@@ -1,13 +1,14 @@
 package livart.common.domain.social.entity;
 
 import livart.common.domain.social.repository.SocialAPIRepository;
-import livart.common.dto.enums.Provider;
+import livart.common.dto.enums.user.Provider;
+import livart.common.exception.CustomException;
+import livart.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Component;
-import org.webjars.NotFoundException;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class DynamicClientRegistrationRepository implements ClientRegistrationRe
     @Override
     public ClientRegistration findByRegistrationId(String registrationId) {
         SocialAPI socialAPI = socialAPIRepository.findByProvider(Provider.valueOf(registrationId.toUpperCase()))
-                .orElseThrow(() -> new NotFoundException("소셜 설정이 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_INPUT_VALUE));
 
         ProviderMetadata metadata = providerMetadataMap.get(registrationId.toLowerCase());
         return ClientRegistration.withRegistrationId(registrationId)

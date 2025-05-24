@@ -4,19 +4,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.address.entity.UserAddress;
 import livart.common.domain.address.repository.UserAddressRepository;
-import livart.common.domain.notice.entity.UserMKConsent;
-import livart.common.domain.notice.repository.UserMKConsentRepository;
-import livart.common.domain.term.entity.Terms;
-import livart.common.domain.term.entity.UserTerms;
-import livart.common.domain.term.repository.TermsRepository;
-import livart.common.domain.term.repository.UserTermsRepository;
+import livart.common.domain.alarm.entity.UserMKConsent;
+import livart.common.domain.alarm.repository.UserMKConsentRepository;
+import livart.common.domain.term.entity.Term;
+import livart.common.domain.term.entity.UserTerm;
+import livart.common.domain.term.repository.TermRepository;
+import livart.common.domain.term.repository.UserTermRepository;
 import livart.common.domain.user.entity.Business;
 import livart.common.domain.user.entity.Consumer;
 import livart.common.domain.user.entity.User;
-import livart.common.dto.enums.Provider;
-import livart.common.dto.enums.Role;
-import livart.common.dto.enums.TermType;
-import livart.common.dto.enums.UserStatus;
+import livart.common.dto.enums.user.Provider;
+import livart.common.dto.enums.user.Role;
+import livart.common.dto.enums.term.TermType;
+import livart.common.dto.enums.user.UserStatus;
 import livart.common.domain.user.repository.BusinessRepository;
 import livart.common.domain.user.repository.ConsumerRepository;
 import livart.common.domain.user.repository.UserRepository;
@@ -34,10 +34,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,8 +48,8 @@ public class AuthService {
     private final UserAddressRepository userAddressRepository;
     private final UserMKConsentRepository userMKConsentRepository;
     private final BusinessRepository businessRepository;
-    private final TermsRepository termsRepository;
-    private final UserTermsRepository userTermsRepository;
+    private final TermRepository termRepository;
+    private final UserTermRepository userTermRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final GlobalService globalService;
     private final LoginHistoryRepository loginHistoryRepository;
@@ -87,27 +85,27 @@ public class AuthService {
 
         userAddressRepository.save(address);
 
-        List<UserTerms> userTerms = request.getAgreements()
+        List<UserTerm> userTerms = request.getAgreements()
                 .stream()
                 .map(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
 
-                    return UserTerms.builder()
+                    return UserTerm.builder()
                             .isAgreed(agreement.getIsAgreed())
                             .user(savedConsumer)
-                            .terms(terms)
+                            .term(term)
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        userTermsRepository.saveAll(userTerms);
+        userTermRepository.saveAll(userTerms);
 
         Boolean marketingConsent = request.getAgreements().stream()
                 .filter(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
-                    return terms.getType() == TermType.MARKETING;
+                    return term.getType() == TermType.MARKETING;
                 })
                 .map(ConsumerSignupRequest.TermsAgreementRequest::getIsAgreed)
                 .findFirst()
@@ -131,7 +129,7 @@ public class AuthService {
                 .loginId(savedConsumer.getLoginId())
                 .userName(savedConsumer.getName())
                 .email(savedConsumer.getEmail())
-                .role(savedConsumer.getRole().name())
+                .role(savedConsumer.getRole())
                 .createdAt(savedConsumer.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
 
@@ -143,7 +141,6 @@ public class AuthService {
             throw new CustomException(ErrorCode.DUPLICATE_BIZ_NUM);
         }
 
-        validateLoginId(request.getLoginId());
         validatePassword(request.getPassword());
 
         String encodedPassword = bCryptPasswordEncoder.encode(request.getPassword());
@@ -179,29 +176,29 @@ public class AuthService {
 
         userAddressRepository.save(address);
 
-        List<UserTerms> userTerms = request.getAgreements()
+        List<UserTerm> userTerms = request.getAgreements()
                 .stream()
                 .map(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
 
-                    return UserTerms.builder()
+                    return UserTerm.builder()
                             .isAgreed(agreement.getIsAgreed())
                             .user(savedBiz)
-                            .terms(terms)
+                            .term(term)
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        userTermsRepository.saveAll(userTerms);
+        userTermRepository.saveAll(userTerms);
 
         Boolean marketingConsent = request.getAgreements().stream()
                 .filter(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
-                    return terms.getType() == TermType.MARKETING;
+                    return term.getType() == TermType.MARKETING;
                 })
-                .map(ConsumerSignupRequest.TermsAgreementRequest::getIsAgreed)
+                .map(BusinessSignupRequest.TermsAgreementRequest::getIsAgreed)
                 .findFirst()
                 .orElse(null);
 
@@ -222,7 +219,7 @@ public class AuthService {
                 .loginId(savedBiz.getLoginId())
                 .userName(savedBiz.getBizName())
                 .email(savedBiz.getEmail())
-                .role(savedBiz.getRole().name())
+                .role(savedBiz.getRole())
                 .createdAt(savedBiz.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
 
@@ -245,7 +242,7 @@ public class AuthService {
                 .userAgent(servletRequest.getHeader("User-Agent"))
                 .success(true)
                 .site("SHOP")
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
 
 
@@ -259,27 +256,27 @@ public class AuthService {
 
         userAddressRepository.save(address);
 
-        List<UserTerms> userTerms = request.getAgreements()
+        List<UserTerm> userTerms = request.getAgreements()
                 .stream()
                 .map(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
 
-                    return UserTerms.builder()
+                    return UserTerm.builder()
                             .isAgreed(agreement.getIsAgreed())
                             .user(savedConsumer)
-                            .terms(terms)
+                            .term(term)
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        userTermsRepository.saveAll(userTerms);
+        userTermRepository.saveAll(userTerms);
 
         Boolean marketingConsent = request.getAgreements().stream()
                 .filter(agreement -> {
-                    Terms terms = termsRepository.findById(agreement.getTermsId())
+                    Term term = termRepository.findById(agreement.getTermsId())
                             .orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
-                    return terms.getType() == TermType.MARKETING;
+                    return term.getType() == TermType.MARKETING;
                 })
                 .map(SocialSignupRequest.TermsAgreementRequest::getIsAgreed)
                 .findFirst()
@@ -302,7 +299,7 @@ public class AuthService {
                 .loginId(savedConsumer.getLoginId())
                 .userName(savedConsumer.getName())
                 .email(savedConsumer.getEmail())
-                .role(savedConsumer.getRole().name())
+                .role(savedConsumer.getRole())
                 .createdAt(savedConsumer.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
     }

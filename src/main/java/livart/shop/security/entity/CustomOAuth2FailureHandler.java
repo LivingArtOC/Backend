@@ -11,9 +11,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +36,7 @@ public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler 
                 .success(false)
                 .failReason(exception.getMessage())
                 .site("SHOP") // 소셜 로그인은 SHOP에서
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
 
     }

@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class BrandResponse {
     private String fileName;
     private String imageUrl;
-    private Long updatedBy;
 }

@@ -1,12 +1,14 @@
 package livart.erp.domain.design.dto.response;
 
-import livart.common.dto.enums.PopupType;
-import livart.common.dto.enums.PopupStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import livart.common.dto.enums.design.PopupType;
+import livart.common.dto.enums.design.PopupStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter @Builder
@@ -24,6 +26,12 @@ public class PopupResponse {
     private Integer heightPixel;
     private String pageUrl;
     private String parameter;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime exposedStartDate; // 노출 시작 시간
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime exposedEndDate; // 노출 마감 시간
 }

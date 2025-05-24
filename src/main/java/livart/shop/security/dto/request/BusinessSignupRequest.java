@@ -24,7 +24,7 @@ public class BusinessSignupRequest {
     private String managerPhoneNum;
     private String faxNum;
 
-    private List<ConsumerSignupRequest.TermsAgreementRequest> agreements;
+    private List<TermsAgreementRequest> agreements;
 
     @Getter
     public static class TermsAgreementRequest {

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 @Service
@@ -23,12 +24,12 @@ public class SmsService {
         String code = generateCode();
 
         try {
-            smsSender.sendSMS(request.getPhoneNum(), "[리바트] 인증번호는 [" + code + "] 입니다.");
+            smsSender.sendSMS(request.getPhoneNum(), "[Livart] 인증번호는 [" + code + "] 입니다.");
 
             otpLogRepository.save(OtpLog.builder()
                     .phoneNum(request.getPhoneNum())
                     .otpCode(code)
-                    .sentAt(Instant.now())
+                    .sentAt(LocalDateTime.now())
                     .status(OtpStatus.SENT)
                     .build());
 
@@ -36,7 +37,7 @@ public class SmsService {
             otpLogRepository.save(OtpLog.builder()
                     .phoneNum(request.getPhoneNum())
                     .otpCode(code)
-                    .sentAt(Instant.now())
+                    .sentAt(LocalDateTime.now())
                     .status(OtpStatus.FAILED)
                     .build());
             throw new CustomException(ErrorCode.SMS_SEND_FAILED);
@@ -44,14 +45,15 @@ public class SmsService {
     }
 
     public void verifyOtp(OtpVerifyRequest request) {
-        OtpLog otp = otpLogRepository.findTopByPhoneAndStatusOrderBySentAtDesc(request.getPhoneNum(), OtpStatus.SENT)
+        OtpLog otp = otpLogRepository.findTopByPhoneNumAndStatusOrderBySentAtDesc(request.getPhoneNum(), OtpStatus.SENT)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUTH_CODE_NOT_FOUND));
 
         if (!otp.getOtpCode().equals(request.getOtpCode())) {
             throw new CustomException(ErrorCode.AUTH_CODE_MISMATCH);
         }
 
-        if (otp.getSentAt().isBefore(Instant.now().minus(3, ChronoUnit.MINUTES))) {
+        if (otp.getSentAt().isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES)) ||
+            otp.getStatus() != OtpStatus.SENT) {
             throw new CustomException(ErrorCode.AUTH_CODE_EXPIRED);
         }
 

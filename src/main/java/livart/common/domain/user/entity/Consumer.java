@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Where(clause = "status IN ('ACTIVE', 'DORMANT')")
 public class Consumer extends User {
 
     private String name;
@@ -30,10 +29,10 @@ public class Consumer extends User {
 
     @CreatedDate
     @Column(updatable = false)
-    private Instant consCreatedAt;
+    private LocalDateTime consCreatedAt;
 
     @LastModifiedDate
-    private Instant consUpdatedAt;
+    private LocalDateTime consUpdatedAt;
 
     public static Consumer fromUser(User user, String loginId, String phoneNum, String email) {
         return Consumer.builder()
@@ -48,6 +47,23 @@ public class Consumer extends User {
                 .lastLoginAt(user.getLastLoginAt())
                 .deletedAt(user.getDeletedAt())
                 .name(loginId)
+                .phoneNum(phoneNum)
+                .build();
+    }
+
+    public static Consumer ConsumerFromUser(User user, String name, String phoneNum) {
+        return Consumer.builder()
+                .id(user.getId())
+                .loginId(user.getLoginId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .provider(user.getProvider())
+                .status(user.getStatus())
+                .adminRegister(user.getAdminRegister())
+                .socialId(user.getSocialId())
+                .lastLoginAt(user.getLastLoginAt())
+                .deletedAt(user.getDeletedAt())
+                .name(name)
                 .phoneNum(phoneNum)
                 .build();
     }

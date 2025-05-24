@@ -21,8 +21,8 @@ public interface AdminActionLogRepository extends JpaRepository<AdminActionLog, 
     Page<AdminActionLog> findLogsByPartialLoginId(
             @Param("loginId") String loginId,
             @Param("table") String table,
-            @Param("start") Instant start,
-            @Param("end") Instant end,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
             Pageable pageable
     );
 }

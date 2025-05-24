@@ -1,8 +1,7 @@
 package livart.common.domain.promotion.repository;
 
-import io.swagger.v3.oas.annotations.Operation;
 import livart.common.domain.promotion.entity.Catalog;
-import livart.common.dto.enums.CatalogType;
+import livart.common.dto.enums.design.CatalogType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

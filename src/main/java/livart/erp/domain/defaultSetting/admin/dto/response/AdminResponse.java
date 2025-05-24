@@ -1,5 +1,8 @@
 package livart.erp.domain.defaultSetting.admin.dto.response;
 
+import livart.common.dto.enums.user.Provider;
+import livart.common.dto.enums.user.Role;
+import livart.common.dto.enums.user.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +16,10 @@ import java.util.List;
 public class AdminResponse {
     private Long adminId;
     private String loginId;
+    private Role role;
+    private Provider provider;
+    private UserStatus status;
+    private Boolean adminRegister;
     private String adminName;
     private String department;
     private String position;

@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Where(clause = "status IN ('ACTIVE', 'DORMANT')")
 public class Business extends User {
 
     @Column(nullable = false)
@@ -48,9 +47,34 @@ public class Business extends User {
 
     @CreatedDate
     @Column(updatable = false)
-    private Instant bizCreatedAt;
+    private LocalDateTime bizCreatedAt;
 
     @LastModifiedDate
-    private Instant bizUpdatedAt;
+    private LocalDateTime bizUpdatedAt;
+
+    public static Business businessFromUser(User user, String ownerName, String bizName, String bizPhoneNum, String bizRegistrationNum,
+                                            String bizStatus, String bizType, String faxNum, String managerName, String managerPhoneNum) {
+        return Business.builder()
+                .id(user.getId())
+                .loginId(user.getLoginId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .provider(user.getProvider())
+                .status(user.getStatus())
+                .adminRegister(user.getAdminRegister())
+                .socialId(user.getSocialId())
+                .lastLoginAt(user.getLastLoginAt())
+                .deletedAt(user.getDeletedAt())
+                .ownerName(ownerName)
+                .bizName(bizName)
+                .bizPhoneNum(bizPhoneNum)
+                .bizRegistrationNum(bizRegistrationNum)
+                .bizStatus(bizStatus)
+                .bizType(bizType)
+                .faxNum(faxNum)
+                .managerName(managerName)
+                .managerPhoneNum(managerPhoneNum)
+                .build();
+    }
 }
 

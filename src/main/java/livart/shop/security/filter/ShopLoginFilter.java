@@ -26,9 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+
 import java.util.Date;
 
 @Slf4j
@@ -137,7 +136,7 @@ public class ShopLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .success(true)
                 .failReason(null)
                 .site("SHOP")
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
     }
     @Override
@@ -159,7 +158,7 @@ public class ShopLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .success(false)
                 .site("SHOP")
                 .failReason(failed.getMessage()) // ex: Bad credentials, User not found
-                .attemptedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .build());
     }
 }

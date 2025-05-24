@@ -1,18 +1,27 @@
 package livart.erp.domain.defaultSetting.policy.dto.response;
 
 
+import livart.common.dto.enums.defaultSetting.DayType;
+import livart.erp.domain.defaultSetting.policy.dto.request.CompanyInfoRequest;
+import livart.erp.domain.defaultSetting.policy.dto.request.OperatingHoursDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+
 @Builder(toBuilder = true) @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompanyInfoResponse {
+    private Long companyInfoId;
     private String companyName;
     private String bizNum;
     private String bizName;
+    private String presidentName;
     private String bizStatus;
     private String bizType;
     private String email;
@@ -23,6 +32,13 @@ public class CompanyInfoResponse {
     private String faxNum;
     private String ecommerceLicense;
     private String companySealURL;
-    private String operatingHours;
-    private Long updatedBy;
+    private Map<DayType, CompanyInfoResponse.TimeRange> hours = new EnumMap<>(DayType.class);
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class TimeRange {
+        private String start;
+        private String end;
+    }
 }

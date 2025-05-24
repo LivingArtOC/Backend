@@ -1,9 +1,9 @@
 package livart.shop.security.entity;
 
 import livart.common.domain.user.entity.User;
-import livart.common.dto.enums.Provider;
-import livart.common.dto.enums.Role;
-import livart.common.dto.enums.UserStatus;
+import livart.common.dto.enums.user.Provider;
+import livart.common.dto.enums.user.Role;
+import livart.common.dto.enums.user.UserStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;

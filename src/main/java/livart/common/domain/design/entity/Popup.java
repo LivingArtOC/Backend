@@ -2,15 +2,14 @@ package livart.common.domain.design.entity;
 
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
-import livart.common.dto.enums.PopupType;
-import livart.common.dto.enums.PopupStatus;
+import livart.common.dto.enums.design.PopupType;
+import livart.common.dto.enums.design.PopupStatus;
 import livart.erp.domain.design.dto.request.PopupRegisterRequest;
 import lombok.*;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 
-@Table(name = "popups")
+@Table(name = "popup")
 @Entity @Builder @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -35,8 +34,8 @@ public class Popup extends BaseTime {
     private String parameter;
     private Long createdUserId; // 생성한 사람
     private Long updatedUserId; // 수정한 사람
-    private Instant exposedStartDate; // 노출 시작 시간
-    private Instant exposedEndDate; // 노출 마감 시간
+    private LocalDateTime exposedStartDate; // 노출 시작 시간
+    private LocalDateTime exposedEndDate; // 노출 마감 시간
 
     public void update(PopupRegisterRequest request, Long updatedUserId) {
         this.title = request.getTitle();
@@ -49,8 +48,8 @@ public class Popup extends BaseTime {
         this.heightPixel = request.getHeightPixel();
         this.pageUrl = request.getPageUrl();
         this.parameter = request.getParameter();
-        this.exposedStartDate = request.getStart().toInstant(ZoneOffset.UTC);
-        this.exposedEndDate = request.getEnd().toInstant(ZoneOffset.UTC);
+        this.exposedStartDate = request.getStart();
+        this.exposedEndDate = request.getEnd();
         this.updatedUserId = updatedUserId;
     }
 

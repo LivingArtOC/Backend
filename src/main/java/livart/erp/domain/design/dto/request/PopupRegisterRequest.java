@@ -1,8 +1,9 @@
 package livart.erp.domain.design.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import livart.common.dto.enums.PopupType;
-import livart.common.dto.enums.PopupStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
+import livart.common.dto.enums.design.PopupType;
+import livart.common.dto.enums.design.PopupStatus;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -20,9 +21,11 @@ public class PopupRegisterRequest {
     private String pageUrl;
     private String parameter;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "노출 시작 시간", example = "2025-05-17 13:30")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime start;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "노출 끝 시간", example = "2025-05-17 13:30")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime end;
 }

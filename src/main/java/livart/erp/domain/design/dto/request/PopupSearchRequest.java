@@ -1,16 +1,17 @@
 package livart.erp.domain.design.dto.request;
 
-import livart.common.dto.enums.PopupType;
-import livart.common.dto.enums.PopupStatus;
+import livart.common.dto.enums.design.PopupType;
+import livart.common.dto.enums.design.PopupStatus;
+import livart.common.dto.request.DateSearchDto;
 import lombok.Getter;
 
 import java.time.LocalDate;
 
 @Getter
 public class PopupSearchRequest {
-    private String title;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private SearchKey key;
+    private String keyword;
+    private DateSearchDto registerDate;
     private PopupStatus status;
     private PopupType type;
 }

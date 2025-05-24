@@ -1,9 +1,7 @@
 package livart.common.domain.user.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import livart.common.domain.setting.entity.AllowedAdminIp;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Where;
@@ -13,6 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Table(name = "admin")
@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Where(clause = "status IN ('ACTIVE', 'DORMANT')")
 public class Admin extends User {
 
     @Column(nullable = false)
@@ -47,10 +46,14 @@ public class Admin extends User {
 
     @CreatedDate
     @Column(updatable = false)
-    private Instant adminCreatedAt;
+    private LocalDateTime adminCreatedAt;
 
     @LastModifiedDate
-    private Instant adminUpdatedAt;
+    private LocalDateTime adminUpdatedAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AllowedAdminIp> allowedAdminIps = new ArrayList<>();
 
     public void updateLoginEnabled(boolean loginEnabled){
         this.loginEnabled = loginEnabled;
