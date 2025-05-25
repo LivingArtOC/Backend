@@ -41,9 +41,6 @@ public class OrderItem extends BaseTime {
     private BigDecimal salePrice; // 판매가
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal delPrice; // 납품가
-
-    @Column(precision = 10, scale = 2)
     private BigDecimal finalPrice; // 쿠폰 적용 가격
 
     @Enumerated(EnumType.STRING)
@@ -62,6 +59,10 @@ public class OrderItem extends BaseTime {
     @Builder.Default
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemOption> orderItemOptions = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderStatusHistory> orderStatusHistories = new ArrayList<>();
 
     public void updateOrderStatus(OrderStatus status, Long updatedBy){
         this.orderStatus = status;

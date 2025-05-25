@@ -7,6 +7,7 @@ import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.order.entity.*;
 import livart.common.domain.order.repository.OrderItemRepository;
 import livart.common.domain.order.repository.OrderRepository;
+import livart.common.domain.order.repository.OrderStatusHistoryRepository;
 import livart.common.domain.product.entity.QProduct;
 import livart.common.dto.enums.order.*;
 import livart.common.exception.CustomException;
@@ -34,6 +35,7 @@ public class OrderService {
     private final GlobalService globalService;
     private final OrderItemRepository orderItemRepository;
     private final JPAQueryFactory jpaQueryFactory;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     public SearchResult<OrderAllResponse> getAllOrders(CustomUserDetails customUserDetails, OrderSearchRequest request, Pageable pageable){
         globalService.validateAdmin(customUserDetails);
@@ -144,7 +146,7 @@ public class OrderService {
                     optionMap.computeIfAbsent(orderItemId, id -> new ArrayList<>()).add(opt)
             );
 
-            OrderStatus status = row.get(orderStatusHistory.status);
+            OrderItemStatus status = row.get(orderStatusHistory.status);
             if (status != null) {
                 switch (status) {
                     case RETURNED -> returnMap.put(orderItemId, true);
@@ -395,6 +397,7 @@ public class OrderService {
                 .select(orderItem.id)
                 .from(orderItem)
                 .join(orderItem.order, order)
+                .leftJoin(afterServiceRequest).on(afterServiceRequest.orderItem.eq(orderItem))
                 .where(builder)
                 .orderBy(order.orderDate.desc())
                 .offset(pageable.getOffset())
@@ -492,6 +495,7 @@ public class OrderService {
                 .select(orderItem.count())
                 .from(orderItem)
                 .join(orderItem.order, order)
+                .leftJoin(afterServiceRequest).on(afterServiceRequest.orderItem.eq(orderItem))
                 .where(builder)
                 .fetchOne();
 
@@ -543,7 +547,23 @@ public class OrderService {
         }
 
         orderItems.forEach(orderItem -> orderItem.updateOrderStatus(status, customUserDetails.getId()));
-        orderItemRepository.saveAll(orderItems);
+
+        List<OrderItem> items = orderItems.stream()
+                        .map(item -> {
+                            OrderStatusHistory history = OrderStatusHistory.builder()
+                                            .status(request.getStatus())
+                                            .orderItem(item)
+                                            .memo("관리자가 직접 변경")
+                                            .changedBy(customUserDetails.getId())
+                                            .changedAt(LocalDateTime.now())
+                                            .build();
+
+                            item.getOrderStatusHistories().add(history);
+                            return item;
+                        }
+                        ).collect(Collectors.toList());
+
+        orderItemRepository.saveAll(items);
 
     }
 
@@ -576,7 +596,22 @@ public class OrderService {
             }
         }
 
-        orderItemRepository.saveAll(orderItems);
+        List<OrderItem> items = orderItems.stream()
+                .map(item -> {
+                            OrderStatusHistory history = OrderStatusHistory.builder()
+                                    .status(request.getStatus())
+                                    .orderItem(item)
+                                    .memo("관리자가 직접 변경")
+                                    .changedBy(customUserDetails.getId())
+                                    .changedAt(LocalDateTime.now())
+                                    .build();
+
+                            item.getOrderStatusHistories().add(history);
+                            return item;
+                        }
+                ).collect(Collectors.toList());
+
+        orderItemRepository.saveAll(items);
 
     }
 
@@ -587,7 +622,22 @@ public class OrderService {
         List<OrderItem> orderItems = orderItemRepository.findAllById(idList);
         orderItems.forEach(item -> item.updateOrderStatus(OrderStatus.DELETED, customUserDetails.getId()));
 
-        orderItemRepository.saveAll(orderItems);
+        List<OrderItem> items = orderItems.stream()
+                .map(item -> {
+                            OrderStatusHistory history = OrderStatusHistory.builder()
+                                    .status(OrderItemStatus.DELETED)
+                                    .orderItem(item)
+                                    .memo("관리자가 직접 변경")
+                                    .changedBy(customUserDetails.getId())
+                                    .changedAt(LocalDateTime.now())
+                                    .build();
+
+                            item.getOrderStatusHistories().add(history);
+                            return item;
+                        }
+                ).collect(Collectors.toList());
+
+        orderItemRepository.saveAll(items);
     }
 
 }

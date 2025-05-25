@@ -10,5 +10,6 @@ public enum OrderItemStatus {
     DELIVERED, // 배송 완료됨
     PENDING, // 입금 대기중
     PAID, // 결제 완료됨
-    FAILED // 결제 실패함
+    FAILED, // 결제 실패함
+    DELETED // 삭제 처리 됨
 }

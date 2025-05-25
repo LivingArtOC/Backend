@@ -2,6 +2,7 @@ package livart.common.domain.order.entity;
 
 import jakarta.persistence.*;
 import livart.common.dto.enums.order.OrderStatus;
+import livart.erp.domain.order.dto.request.OrderItemStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,11 +18,11 @@ public class OrderStatusHistory {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_item_id")
+    @JoinColumn(name = "order_item_id", nullable = false)
     private OrderItem orderItem;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private OrderItemStatus status;
 
     private String memo; // 변경 사유, 관리자 입력 메시지
 

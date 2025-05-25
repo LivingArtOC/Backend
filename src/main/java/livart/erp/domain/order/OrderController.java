@@ -25,13 +25,13 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "주문 관련 API")
+@Tag(name = "주문 관련 API", description = "✅ 개발 완료")
 @RequestMapping("api/erp/order")
 public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/all")
-    @Operation(summary = "주문통합 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ 주문통합 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<OrderAllResponse>>> getAllOrders(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody OrderSearchRequest request,
@@ -43,7 +43,7 @@ public class OrderController {
     }
 
     @PostMapping("/{status}")
-    @Operation(summary = "개별 주문 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ 개별 주문 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<OrderIndResponse>>> getIndOrderList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody OrderSearchRequest request,
@@ -56,7 +56,7 @@ public class OrderController {
     }
 
     @PutMapping("/pending")
-    @Operation(summary = "입금대기 리스트에서 주문 상태 변경 API, 토큰 O")
+    @Operation(summary = "✅ 입금대기 리스트에서 주문 상태 변경 API, 토큰 O")
     public ResponseEntity<ApiResponse<String>> updatePending(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                              @RequestBody UpdateStatusRequest request){
         orderService.updatePending(customUserDetails, request);
@@ -64,7 +64,7 @@ public class OrderController {
     }
 
     @PutMapping("/paid")
-    @Operation(summary = "결제완료, 상품준비중, 배송완료, 구매확정 리스트에서 주문 상태 변경 API, 토큰 O")
+    @Operation(summary = "✅ 결제완료, 상품준비중, 배송완료, 구매확정 리스트에서 주문 상태 변경 API, 토큰 O")
     public ResponseEntity<ApiResponse<String>> updatePaid(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                              @RequestBody UpdateStatusRequest request){
         orderService.updatePaid(customUserDetails, request);
@@ -72,7 +72,7 @@ public class OrderController {
     }
 
     @PutMapping("/fail")
-    @Operation(summary = "결제 중단/실패 리스트에서 일괄 삭제 API, 토큰 O")
+    @Operation(summary = "✅ 결제 중단/실패 리스트에서 일괄 삭제 API, 토큰 O")
     public ResponseEntity<ApiResponse<String>> deleteItem(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                           @RequestBody List<Long> idList){
         orderService.deleteItem(customUserDetails, idList);
