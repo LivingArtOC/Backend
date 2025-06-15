@@ -25,7 +25,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "공지사항 관련 API", description = "✅ 개발 완료")
+@Tag(name = "공지사항 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/notice")
 public class NoticeController {
     private final NoticeService noticeService;

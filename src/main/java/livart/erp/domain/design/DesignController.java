@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "디자인 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "디자인 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/design")
 public class DesignController {
     private final DesignService designService;

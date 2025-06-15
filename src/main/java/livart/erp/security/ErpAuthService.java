@@ -119,7 +119,7 @@ public class ErpAuthService {
             throw new CustomException(ErrorCode.ADMIN_ACCESS_DENIED);
         }
 
-        if (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.DORMANT) {
+        if (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.DORMANT && user.getStatus() != UserStatus.ADMIN_DORMANT) {
             throw new CustomException(ErrorCode.USER_STATUS_BLOCKED);
         }
 

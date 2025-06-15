@@ -18,7 +18,7 @@ public class PortfolioDisplay extends BaseTime {
     private Integer orderIndex;
     private Long updatedBy;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "portfolio_id", nullable = false)
     private Portfolio portfolio;
 }

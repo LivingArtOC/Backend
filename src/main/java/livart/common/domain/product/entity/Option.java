@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
 import livart.common.domain.order.entity.OrderItem;
 import livart.common.domain.support.estimate.entity.EstimateItem;
+import livart.common.dto.enums.product.ProductStatus;
 import livart.common.dto.enums.product.StockStatus;
 import lombok.*;
 
@@ -22,11 +23,20 @@ public class Option extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Setter
+    private String optionName;
     private String optionCode;
     private Boolean isExposed;
+    private String imageUrl; // 옵션 이미지
+    private String fileName; // 이미지 파일 명
 
     @Enumerated(EnumType.STRING)
     private StockStatus status;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private ProductStatus productStatus = ProductStatus.ACTIVE;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal purchasePrice; // 옵션 매입가
@@ -46,5 +56,15 @@ public class Option extends BaseTime {
     @Builder.Default
     @OneToMany(mappedBy = "option", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionMapping> optionMappings = new ArrayList<>();
+
+    public void updateStatus(StockStatus status, Long updatedBy){
+        this.status = status;
+        this.updatedBy = updatedBy;
+    }
+
+    public void deactivate(ProductStatus status, Long updatedBy) {
+        this.productStatus = status;
+        this.updatedBy = updatedBy;
+    }
 
 }

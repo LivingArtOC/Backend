@@ -1,7 +1,6 @@
 package livart.common.domain.product.repository;
 
 import livart.common.domain.product.entity.Option;
-import livart.common.domain.product.entity.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +16,7 @@ public interface OptionRepository extends JpaRepository<Option, Long> {
 
     List<Option> findAllByProductId(Long productId);
 
+
     Optional<Option> findByProductIdAndHashCode(Long productId, String hashCode);
 
-    List<Option> findAllByProduct(Product product);
 }

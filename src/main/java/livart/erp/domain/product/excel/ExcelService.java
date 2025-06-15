@@ -1,17 +1,42 @@
 package livart.erp.domain.product.excel;
 
 
+import livart.common.Auth.CustomUserDetails;
+import livart.common.domain.product.entity.Option;
 import livart.common.domain.product.entity.Product;
+import livart.common.domain.product.repository.OptionRepository;
+import livart.common.domain.product.repository.ProductRepository;
+import livart.common.dto.enums.product.ProductExcelField;
+import livart.common.exception.CustomException;
+import livart.common.exception.ErrorCode;
+import livart.common.service.GlobalService;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ExcelService {
 
-    public Workbook generateProductExcel(List<Product> products) {
+    private final GlobalService globalService;
+    private final OptionRepository optionRepository;
+    public List<ExcelFieldResponse> getFieldList(CustomUserDetails customUserDetails){
+        globalService.validateAdmin(customUserDetails);
+
+        List<ExcelFieldResponse> fields = Arrays.stream(ProductExcelField.values())
+                .map(field -> new ExcelFieldResponse(field.getField(), field.getLabel()))
+                .collect(Collectors.toList());
+
+        return fields;
+    }
+
+    public Workbook generateProductExcel(CustomUserDetails customUserDetails, ExcelDownloadRequest request) {
+
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Products");
 
@@ -32,15 +57,6 @@ public class ExcelService {
         createHeaderCell(headerRow, 13, "최근 수정일");
 
         int rowNum = 1;
-        for (Product product : products) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(product.getId());
-            row.createCell(1).setCellValue(product.getCategoryId());
-            row.createCell(2).setCellValue(product.getProductName());
-            row.createCell(3).setCellValue(product.getProductCode());
-            row.createCell(4).setCellValue(product.getProductStatus().name());
-            row.createCell(4).setCellValue(product.getStatus().name());
-        }
 
         // 📌 열 너비 자동 조정
         for (int i = 0; i <= 4; i++) {

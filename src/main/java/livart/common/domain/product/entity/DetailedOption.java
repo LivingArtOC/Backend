@@ -22,8 +22,6 @@ public class DetailedOption extends BaseTime {
     private Integer orderIndex;
     private String optionName; // 옵션 명
     private String valueName; // 옵션 값
-    private String imageUrl; // 옵션 이미지
-    private String fileName; // 이미지 파일 명
     private Long updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,10 +32,8 @@ public class DetailedOption extends BaseTime {
     @OneToMany(mappedBy = "detailedOption", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionMapping> optionMappings = new ArrayList<>();
 
-    public void updateDetailOption(String valueName, String imageUrl, String fileName, Long updatedBy) {
+    public void updateDetailOption(String valueName, Long updatedBy) {
         this.valueName = valueName;
-        this.imageUrl = imageUrl;
-        this.fileName = fileName;
         this.updatedBy = updatedBy;
     }
 }

@@ -10,5 +10,4 @@ import java.util.Optional;
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
     List<Portfolio> findAllByIdInAndIsPinnedFalse(List<Long> idList);
 
-    Optional<Portfolio> findByOrderId(Long orderId);
 }

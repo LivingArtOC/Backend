@@ -1,5 +1,6 @@
 package livart.erp.domain.order.dto.request;
 
+import livart.common.dto.enums.order.OrderStatus;
 import lombok.Getter;
 
 import java.util.List;
@@ -7,5 +8,5 @@ import java.util.List;
 @Getter
 public class UpdateStatusRequest {
     private List<Long> idList;
-    private OrderItemStatus status;
+    private OrderStatus status;
 }

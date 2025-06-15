@@ -71,6 +71,7 @@ public class AuthService {
                 .status(UserStatus.ACTIVE)
                 .name(request.getUserName())
                 .phoneNum(request.getPhoneNum())
+                .userName(request.getUserName())
                 .build();
 
         Consumer savedConsumer = consumerRepository.save(consumer);
@@ -152,7 +153,7 @@ public class AuthService {
                 .ownerName(request.getOwnerName())
                 .bizName(request.getBizName())
                 .bizRegistrationNum(request.getBizRegistrationNum())
-                .bizPhoneNum(request.getBizPhoneNum())
+                .phoneNum(request.getBizPhoneNum())
                 .email(request.getEmail())
                 .role(Role.BUSINESS)
                 .provider(Provider.LOCAL)
@@ -162,6 +163,7 @@ public class AuthService {
                 .managerName(request.getManagerName())
                 .managerPhoneNum(request.getManagerPhoneNum())
                 .faxNum(request.getFaxNum())
+                .userName(request.getBizName())
                 .build();
 
         Business savedBiz = businessRepository.save(business);

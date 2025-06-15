@@ -2,6 +2,7 @@ package livart.common.domain.term.entity;
 
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
+import livart.common.dto.enums.term.TermSuperType;
 import livart.common.dto.enums.term.TermType;
 import lombok.*;
 
@@ -20,6 +21,9 @@ public class Term extends BaseTime {
 
     private String title;
     private Long updatedBy;
+
+    @Enumerated(EnumType.STRING)
+    private TermSuperType superType;
 
     @Enumerated(EnumType.STRING)
     private TermType type;

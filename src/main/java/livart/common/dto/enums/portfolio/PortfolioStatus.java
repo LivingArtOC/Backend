@@ -7,6 +7,6 @@ import java.util.Arrays;
 public enum PortfolioStatus {
     ACTIVE,
     TEMPORARY_STORAGE,
-    DELETED;
+    DELETED
 
 }

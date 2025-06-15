@@ -25,7 +25,10 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지 크기는 50MB 이하만 가능합니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "업로드한 이미지 형식이 기준에 적합하지 않습니다."),
     INVALID_PRODUCT_STATUS(HttpStatus.BAD_REQUEST, "삭제 상태의 제품만 완전 삭제하실 수 있습니다."),
-
+    INVALID_KEYWORD_FORMAT(HttpStatus.BAD_REQUEST, "숫자만 입력하실 수 있습니다."),
+    INVALID_SMS_SETTING(HttpStatus.BAD_REQUEST, "잘못된 SMS 설정 입력값입니다."),
+    INVALID_EMAIL_SETTING(HttpStatus.BAD_REQUEST, "잘못된 EMAIL 설정 입력값입니다."),
+    INVALID_SEND_TARGET(HttpStatus.BAD_REQUEST, "잘못된 발송 대상입니다."),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
@@ -35,12 +38,16 @@ public enum ErrorCode {
     PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
     AUTH_CODE_MISMATCH(HttpStatus.UNAUTHORIZED, "인증번호가 일치하지 않습니다."),
     AUTH_CODE_EXPIRED(HttpStatus.UNAUTHORIZED, "인증번호 유효시간이 지났습니다."),
+    PHONE_AUTHORIZED(HttpStatus.UNAUTHORIZED, "휴대폰 인증이 필요합니다."),
+    SMS_BALANCE_FETCH_FAILED(HttpStatus.UNAUTHORIZED, "Coolsms 잔여 포인트 조회에 실패했습니다"),
 
     // 403 FORBIDDEN
     ADMIN_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 사이트는 관리자만 이용하실 수 있습니다."),
     USER_STATUS_BLOCKED(HttpStatus.FORBIDDEN, "사용자의 계정이 삭제되었거나 존재하지 않습니다."),
     ADMIN_LOGIN_DISABLED(HttpStatus.FORBIDDEN, "해당 사이트에 대한 접근이 제한되어 있습니다."),
     ACCESS_DENIED_BY_IP(HttpStatus.FORBIDDEN, "허용되지 않은 IP로 접근은 불가합니다."),
+    LOGIN_RESTRICT(HttpStatus.FORBIDDEN, "비밀번호 5회 실패로 인해 1시간동안 로그인이 제한되셨습니다."),
+    TEMPLATE_NOT_APPROVED(HttpStatus.FORBIDDEN, "허용되지 않은 알림톡 템플릿은 사용 불가합니다."),
 
     // 404 NOT_FOUND
     INVALID_BIZ_NUMBER(HttpStatus.NOT_FOUND, "사업자 상태 조회 실패"),
@@ -73,6 +80,14 @@ public enum ErrorCode {
     QUOTATION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 견적서를 찾을 수 없습니다."),
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 소셜의 KEY 정보를 찾을 수 없습니다."),
     OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 옵션 정보를 찾을 수 없습니다."),
+    MILEAGE_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "마일리지 설정 정보를 찾을 수 없습니다."),
+    SMS_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "SMS 관련 설정 정보를 찾을 수 없습니다."),
+    EMAIL_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "EMAIL 관련 설정 정보를 찾을 수 없습니다."),
+    EMAIL_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 이메일 발송 기록을 찾을 수 없습니다."),
+    SMS_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 SMS 템플릿을 찾을 수 없습니다."),
+    SMS_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "저장된 메시지 중 해당 SMS 메시지를 찾을 수 없습니다."),
+    SMS_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 SMS 발송 기록을 찾을 수 없습니다."),
+    TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 알림톡 템플릿을 찾을 수 없습니다."),
 
     // 405 METHOD_NOT_ALLOWED
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 HTTP 메서드입니다."),

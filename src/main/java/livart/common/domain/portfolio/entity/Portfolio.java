@@ -18,8 +18,6 @@ public class Portfolio extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long orderId;
-
     private String companyName;
     private String location;
     private String concept;
@@ -46,10 +44,11 @@ public class Portfolio extends BaseTime {
     private List<PortfolioItem> portfolioItems = new ArrayList<>();
 
     @Setter
-    @OneToOne(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PortfolioDisplay portfolioDisplays;
+    @Builder.Default
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PortfolioDisplay> portfolioDisplays = new ArrayList<>();
 
-    public void update(String companyName, String location, String concept, String description, LocalDate registerStartDate, LocalDate registerEndDate, Long updatedBy, Long orderId){
+    public void update(String companyName, String location, String concept, String description, LocalDate registerStartDate, LocalDate registerEndDate, Long updatedBy){
         this.companyName = companyName;
         this.location = location;
         this.concept = concept;
@@ -57,7 +56,6 @@ public class Portfolio extends BaseTime {
         this.registerStartDate = registerStartDate;
         this.registerEndDate = registerEndDate;
         this.updatedBy = updatedBy;
-        this.orderId = orderId;
     }
 
     public void updateStatus(PortfolioStatus status, Long updatedBy){

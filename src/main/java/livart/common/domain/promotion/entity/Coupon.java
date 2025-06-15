@@ -4,6 +4,7 @@ package livart.common.domain.promotion.entity;
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
 import livart.common.domain.address.entity.UserAddress;
+import livart.common.domain.member.entity.CouponLog;
 import livart.common.dto.enums.coupon.CouponDiscountType;
 import livart.common.dto.enums.coupon.CouponExpiration;
 import livart.common.dto.enums.coupon.CouponType;
@@ -12,6 +13,7 @@ import livart.common.dto.enums.coupon.IssuedStatus;
 import livart.erp.domain.promotion.dto.request.CouponRegisterRequest;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class Coupon extends BaseTime {
     @Enumerated(EnumType.STRING)
     private CouponDiscountType couponDiscountType;
 
-    private Long discountPrice;
+    private BigDecimal discountPrice;
     private Boolean expiredMessage; // 만료 발송 알림톡
     private Integer minOrderPrice;
     private Long createdBy;
@@ -58,6 +60,10 @@ public class Coupon extends BaseTime {
     @Builder.Default
     @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CouponAutoGrant> couponAutoGrants = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CouponLog> couponLogs = new ArrayList<>();
 
     public void update(CouponRegisterRequest request, Long updatedBy){
         this.couponType = request.getCouponType();

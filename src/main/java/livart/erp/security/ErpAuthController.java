@@ -25,7 +25,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/erp/auth")
 @RequiredArgsConstructor
-@Tag(name = "로그인/회원가입 - 로그인 관련 API", description = "✅ 개발 완료")
+@Tag(name = "로그인/회원가입 - 로그인 관련 API", description = "✅✅ 개발 완료")
 public class ErpAuthController {
     private final ErpAuthService erpAuthService;
     @PostMapping("/login/test")

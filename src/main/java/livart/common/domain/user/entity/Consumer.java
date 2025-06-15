@@ -24,9 +24,6 @@ public class Consumer extends User {
 
     private String name;
 
-    @Column(nullable = false)
-    private String phoneNum;
-
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime consCreatedAt;

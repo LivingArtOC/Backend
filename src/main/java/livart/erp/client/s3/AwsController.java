@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "S3 단일 이미지 저장 API", description = "✅ 개발 완료")
+@Tag(name = "S3 단일 이미지 저장 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/client")
 public class AwsController {
 

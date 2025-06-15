@@ -19,9 +19,11 @@ public class MileageLog extends BaseTime {
 
     @Enumerated(EnumType.STRING)
     private MileageType type;
+    private String name;
     private Integer amount;
     private String adminMemo;
-    private Long performerId;
+    private String agent;
+    private Long orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

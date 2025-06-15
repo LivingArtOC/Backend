@@ -47,8 +47,6 @@ public class OptionService {
                         .orderIndex(d.getOrderIndex())
                         .optionName(d.getOptionName())
                         .valueName(d.getValueName())
-                        .imageUrl(d.getImageUrl())
-                        .fileName(d.getFileName())
                         .updatedBy(customUserDetails.getId())
                         .product(savedProduct)
                         .build()
@@ -72,6 +70,8 @@ public class OptionService {
                     Option option = Option.builder()
                             .optionCode(r.getOptionCode())
                             .isExposed(r.getIsExposed())
+                            .imageUrl(r.getImageUrl())
+                            .fileName(r.getFileName())
                             .status(r.getStatus())
                             .price(r.getPrice())
                             .purchasePrice(r.getPurchasePrice())
@@ -100,13 +100,22 @@ public class OptionService {
                                         .updatedBy(customUserDetails.getId())
                                         .build();
 
-                                detailedOption.getOptionMappings().add(mapping);
                                 return mapping;
 
                             }).collect(Collectors.toList());
 
+                    String optionName = r.getOptionRequestList().stream()
+                            .sorted(Comparator.comparing(o -> groupOrderMap.get(o.getOptionName())))
+                            .map(OptionRequest::getValueName)
+                            .collect(Collectors.joining("/"));
+
+                    mappings.forEach(mapping -> {
+                        mapping.getDetailedOption().getOptionMappings().add(mapping);
+                    });
+
                     option.getOptionMappings().addAll(mappings);
                     option.setHashCode(hashedKey);
+                    option.setOptionName(optionName);
                     return option;
                 }).collect(Collectors.toList());
 
@@ -146,8 +155,6 @@ public class OptionService {
                         .detailOptionId(d.getId())
                         .optionName(d.getOptionName())
                         .valueName(d.getValueName())
-                        .fileName(d.getFileName())
-                        .imageUrl(d.getImageUrl())
                         .build()
                 ).collect(Collectors.toList());
 
@@ -163,6 +170,8 @@ public class OptionService {
 
                     return OptionCombinationResponse.builder()
                             .optionId(o.getId())
+                            .imageUrl(o.getImageUrl())
+                            .fileName(o.getFileName())
                             .purchasePrice(o.getPurchasePrice())
                             .price(o.getPrice())
                             .optionCode(o.getOptionCode())
@@ -198,6 +207,7 @@ public class OptionService {
                             .optionCode(o.getOptionCode())
                             .isExposed(o.getIsExposed())
                             .status(o.getStatus())
+                            .imageUrl(o.getImageUrl())
                             .optionResponseList(optionResponseList)
                             .build();}
                 ).collect(Collectors.toList());

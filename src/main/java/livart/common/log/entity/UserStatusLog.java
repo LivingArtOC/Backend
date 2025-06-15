@@ -3,6 +3,7 @@ package livart.common.log.entity;
 import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
 import livart.common.domain.user.entity.User;
+
 import livart.common.dto.enums.user.UserStatus;
 import lombok.*;
 
@@ -18,8 +19,7 @@ public class UserStatusLog extends BaseTime {
     private Long id;
 
     private UserStatus updateStatus;
-    private Boolean byAdmin;
-    private String agent;
+    private String agent; // 행위자
     private String reason;
     private String withdrawIpAdress;
     private Long createdBy;

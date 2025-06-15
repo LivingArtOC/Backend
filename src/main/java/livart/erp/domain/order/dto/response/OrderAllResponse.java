@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Getter @Builder
 @AllArgsConstructor
@@ -25,7 +26,7 @@ public class OrderAllResponse {
     private String orderName; // 주문자명
     private LocalDate orderDate;
     private String productName;
-    private List<OrderOptionResponse> orderOption;
+    private Set<OrderOptionResponse> orderOption;
     private BigDecimal finalPrice;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;

@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "기본 설정 - 기본 정책 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "기본 설정 - 기본 정책 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/setting/policy")
 public class PolicyController {
 
@@ -45,32 +45,17 @@ public class PolicyController {
     }
 
     @GetMapping("/use-policy")
-    @Operation(summary = "✅ 이용 약관 조회 API, 토큰 O")
+    @Operation(summary = "✅ 이용 약관 및 개인정보 처리방침 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<UsePolicyResponse>> getUsePolicy(@AuthenticationPrincipal CustomUserDetails customUserDetails){
         UsePolicyResponse response = policyService.getUsePolicy(customUserDetails);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PutMapping("/use-policy")
-    @Operation(summary = "✅ 이용 약관 저장 & 수정 API, 토큰 O")
+    @Operation(summary = "✅ 이용 약관 및 개인정보 처리방침 저장 & 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<UsePolicyResponse>> updateUsePolicy(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                           @RequestBody UsePolicyRequest request){
         UsePolicyResponse response = policyService.updateUsePolicy(customUserDetails, request);
-        return ResponseEntity.ok(ApiResponse.ok(response));
-    }
-
-    @GetMapping("/course")
-    @Operation(summary = "✅ 개인정보 처리방침 조회 API, 토큰 O")
-    public ResponseEntity<ApiResponse<CourseResponse>> getCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails){
-        CourseResponse response = policyService.getCourse(customUserDetails);
-        return ResponseEntity.ok(ApiResponse.ok(response));
-    }
-
-    @PutMapping("/course")
-    @Operation(summary = "✅ 개인정보 처리방침 저장 & 수정 API, 토큰 O")
-    public ResponseEntity<ApiResponse<CourseResponse>> updateCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                          @RequestBody CourseRequest request){
-        CourseResponse response = policyService.updateCourse(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

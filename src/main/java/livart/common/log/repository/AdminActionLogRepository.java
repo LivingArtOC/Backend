@@ -15,7 +15,7 @@ public interface AdminActionLogRepository extends JpaRepository<AdminActionLog, 
     @Query("""
     SELECT a FROM AdminActionLog a
     WHERE LOWER( a.adminLoginId) LIKE LOWER(CONCAT('%', :loginId, '%'))
-      AND a.targetTable = :table
+      AND LOWER( a.targetTable) LIKE LOWER(CONCAT('%', :table, '%'))
       AND a.createdAt BETWEEN :start AND :end
 """)
     Page<AdminActionLog> findLogsByPartialLoginId(

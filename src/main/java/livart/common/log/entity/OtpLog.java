@@ -5,7 +5,6 @@ import livart.common.domain.BaseTime;
 import livart.common.dto.enums.OtpStatus;
 import lombok.*;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Table(name = "otp_log")
@@ -26,5 +25,8 @@ public class OtpLog extends BaseTime {
 
     public void markUsed() {
         this.status = OtpStatus.USED;
+    }
+    public void markVerified() {
+        this.status = OtpStatus.VERIFIED;
     }
 }

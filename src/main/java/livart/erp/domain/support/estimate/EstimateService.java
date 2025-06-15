@@ -327,12 +327,12 @@ public class EstimateService {
                             .map(mapping -> EstimateItemOption.builder()
                                     .optionName(mapping.getDetailedOption().getOptionName())
                                     .valueName(mapping.getDetailedOption().getValueName())
-                                    .imageUrl(mapping.getDetailedOption().getImageUrl())
-                                    .fileName(mapping.getDetailedOption().getFileName())
+                                    .imageUrl(mapping.getOption().getImageUrl())
+                                    .fileName(mapping.getOption().getFileName())
                                     .updatedBy(customUserDetails.getId())
                                     .estimateItem(item)
                                     .build())
-                            .toList();
+                            .collect(Collectors.toList());
 
                     item.getEstimateItemOptions().addAll(itemOptions);
                     return item;

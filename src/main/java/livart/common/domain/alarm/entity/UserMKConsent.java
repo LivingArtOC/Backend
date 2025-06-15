@@ -15,16 +15,16 @@ public class UserMKConsent extends BaseTime {
     private Long id;
 
     @Column(nullable = false)
-    private boolean smsNotice;
+    private Boolean smsNotice;
 
     @Column(nullable = false)
-    private boolean emailNotice;
+    private Boolean emailNotice;
 
     @Column(nullable = false)
-    private boolean kakaoNotice;
+    private Boolean kakaoNotice;
 
     @Column(nullable = false)
-    private boolean tmNotice;
+    private Boolean tmNotice;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

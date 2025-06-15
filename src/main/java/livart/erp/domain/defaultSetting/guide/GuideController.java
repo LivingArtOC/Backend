@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "기본 설정 - 안내 문구 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "기본 설정 - 안내 문구 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/setting/guide")
 public class GuideController {
 

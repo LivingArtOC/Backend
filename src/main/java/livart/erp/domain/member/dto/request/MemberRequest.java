@@ -19,13 +19,14 @@ public class MemberRequest {
     private Boolean emailNotice;
     private Boolean smsNotice;
     private Boolean kakaoNotice;
+    private Boolean tmNotice;
     private String zipcode;
     private String address;
     private String detailedAddress;
 
     private String bizName;
     private String presidentName;
-    private String bizRegisterationName;
+    private String bizRegisterationNum;
     private String bizStatus;
     private String bizType;
     private String faxNum;

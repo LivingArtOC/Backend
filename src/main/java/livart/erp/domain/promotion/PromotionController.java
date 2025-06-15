@@ -29,7 +29,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 @CrossOrigin("*")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "프로모션 관련 API", description = "✅ 개발 완료")
+@Tag(name = "프로모션 관련 API", description = "✅✅ 개발 완료")
 public class PromotionController {
     private final PromotionService promotionService;
 

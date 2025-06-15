@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,6 +117,7 @@ public class GuideService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GUIDE_NOT_FOUND));
 
         List<ImageDto> imageDtoList = guide.getGuideImages().stream()
+                .sorted(Comparator.comparing(GuideImage::getOrderIndex))
                 .map(i -> ImageDto.builder()
                         .orderIndex(i.getOrderIndex())
                         .imageUrl(i.getImageUrl())
@@ -155,6 +158,7 @@ public class GuideService {
         Guide saved1 = guideRepository.save(guide);
 
         List<GuideImage> images = request.getImageList().stream()
+                .sorted(Comparator.comparing(ImageDto::getOrderIndex))
                 .map(i -> GuideImage.builder()
                         .orderIndex(i.getOrderIndex())
                         .fileName(i.getFileName())
@@ -168,6 +172,7 @@ public class GuideService {
         Guide saved = guideRepository.save(saved1);
 
         List<ImageDto> imageDtoList = saved.getGuideImages().stream()
+                .sorted(Comparator.comparing(GuideImage::getOrderIndex))
                 .map(i -> ImageDto.builder()
                         .orderIndex(i.getOrderIndex())
                         .imageUrl(i.getImageUrl())

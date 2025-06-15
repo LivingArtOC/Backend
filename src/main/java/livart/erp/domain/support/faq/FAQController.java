@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "FAQ 관련 API", description = "✅ 개발 완료")
+@Tag(name = "FAQ 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/faq")
 public class FAQController {
     private final FAQService faqService;

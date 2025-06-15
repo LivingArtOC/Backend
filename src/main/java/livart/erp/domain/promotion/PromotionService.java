@@ -211,8 +211,8 @@ public class PromotionService {
                                                 : "발급일 기준 " + g.getCoupon().getIssuedDate() + "일";
 
                                         String discountRate = (g.getCoupon().getCouponDiscountType() == CouponDiscountType.FIXED)
-                                                ? String.format("%,d원", g.getCoupon().getDiscountPrice())
-                                                : String.format("%d%%", g.getCoupon().getDiscountPrice());
+                                                ? String.format("%,d원", g.getCoupon().getDiscountPrice().intValue())
+                                                : String.format("%d%%", g.getCoupon().getDiscountPrice().intValue());
 
                                         return AutoCouponList.builder()
                                                 .couponId(g.getCoupon().getId())
@@ -287,8 +287,8 @@ public class PromotionService {
                                                 : "발급일 기준 " + g.getCoupon().getIssuedDate() + "일";
 
                                         String discountRate = (g.getCoupon().getCouponDiscountType() == CouponDiscountType.FIXED)
-                                                ? String.format("%,d원", g.getCoupon().getDiscountPrice())
-                                                : String.format("%d%%", g.getCoupon().getDiscountPrice());
+                                                ? String.format("%,d원", g.getCoupon().getDiscountPrice().intValue())
+                                                : String.format("%d%%", g.getCoupon().getDiscountPrice().intValue());
 
                                         return AutoCouponList.builder()
                                                 .couponId(g.getCoupon().getId())
@@ -343,8 +343,8 @@ public class PromotionService {
                             : "발급일 기준 " + c.getIssuedDate() + "일";
 
                     String discountRate = (c.getCouponDiscountType() == CouponDiscountType.FIXED)
-                            ? String.format("%,d원", c.getDiscountPrice())
-                            : String.format("%d%%", c.getDiscountPrice());
+                            ? String.format("%,d원", c.getDiscountPrice().intValue())
+                            : String.format("%d%%", c.getDiscountPrice().intValue());
 
                     return AutoCouponList.builder()
                             .couponId(c.getId())

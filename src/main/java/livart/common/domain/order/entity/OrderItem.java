@@ -28,11 +28,17 @@ public class OrderItem extends BaseTime {
     private Long productId;
     private String productCode;
     private String productName;
+    private String itemName;
     private String optionCode;
+    private String imageUrl; // 옵션 이미지
+    private String fileName; // 이미지 파일 명
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus; // 주문됨, 주문 취소, 교환, 환불, 반품
+    private OrderStatus orderStatus;
     private Long couponId;
+
+    @Enumerated(EnumType.STRING)
+    private DeliveryStatus deliveryStatus;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal originalPrice; // 정가(소비자가) 찍찍이
@@ -42,9 +48,6 @@ public class OrderItem extends BaseTime {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal finalPrice; // 쿠폰 적용 가격
-
-    @Enumerated(EnumType.STRING)
-    private DeliveryStatus deliveryStatus;
 
     private Long updatedBy;
 
@@ -69,8 +72,4 @@ public class OrderItem extends BaseTime {
         this.updatedBy = updatedBy;
     }
 
-    public void updateDelStatus(DeliveryStatus status, Long updatedBy){
-        this.deliveryStatus = status;
-        this.updatedBy = updatedBy;
-    }
 }
