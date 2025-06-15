@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin("*")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "부가서비스 - 소셜 로그인 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "부가서비스 - 소셜 로그인 설정 관련 API", description = "✅✅ 개발 완료")
 public class SocialAPIController {
 
     private final SocialAPIService socialAPIService;

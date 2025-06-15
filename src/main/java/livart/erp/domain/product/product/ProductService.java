@@ -31,6 +31,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -52,9 +54,9 @@ public class ProductService {
     private final JPAQueryFactory queryFactory;
     private final CategoryDisplayRepository categoryDisplayRepository;
     private final ProductImageRepository productImageRepository;
-
+    private final OptionRepository optionRepository;
     @Transactional
-    public ProductRegisterResponse registerProduct(CustomUserDetails customUserDetails, ProductRegisterRequest request){
+    public ProductRegisterResponse registerProduct(CustomUserDetails customUserDetails, ProductRegisterRequest request) {
         globalService.validateAdmin(customUserDetails);
 
         Product product = Product.builder()
@@ -86,7 +88,7 @@ public class ProductService {
         List<DetailedOptionResponse> detailedOptionResponses = new ArrayList<>();
         List<OptionCombinationResponse> combinationResponses = new ArrayList<>();
 
-        if(Boolean.TRUE.equals(request.getOptionUsage())){
+        if (Boolean.TRUE.equals(request.getOptionUsage())) {
             OptionListResponse saveOption =
                     optionService.saveOption(customUserDetails, savedProduct, request.getOptionCombinations(), request.getDetailedOptions());
 
@@ -105,10 +107,10 @@ public class ProductService {
         return toProductResponse(saved, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
 
     }
-    
-    public ProductRegisterResponse getProduct(CustomUserDetails customUserDetails, Long productId){
+
+    public ProductRegisterResponse getProduct(CustomUserDetails customUserDetails, Long productId) {
         globalService.validateAdmin(customUserDetails);
-        
+
         Product product = productRepository.findById(productId).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
         List<ProductColorResponse> productColors =
@@ -127,13 +129,14 @@ public class ProductService {
 
         return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
     }
+
     @Transactional
-    public ProductRegisterResponse updateProduct(CustomUserDetails customUserDetails, Long productId, ProductRegisterRequest request){
+    public ProductRegisterResponse updateProduct(CustomUserDetails customUserDetails, Long productId, ProductRegisterRequest request) {
         globalService.validateAdmin(customUserDetails);
 
         Product product = productRepository.findById(productId).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        product.update(request,customUserDetails.getId());
+        product.update(request, customUserDetails.getId());
 
         productColorService.deleteColor(product);
 
@@ -143,13 +146,13 @@ public class ProductService {
         List<DetailedOptionResponse> detailedOptionResponses = new ArrayList<>();
         List<OptionCombinationResponse> combinationResponses = new ArrayList<>();
 
-        if(Boolean.TRUE.equals(request.getOptionUsage())){
+        if (Boolean.TRUE.equals(request.getOptionUsage())) {
             OptionListResponse saveOption =
                     optionService.updateOption(customUserDetails, product, request.getOptionCombinations(), request.getDetailedOptions());
 
             detailedOptionResponses = saveOption.getDetailedOptionResponse();
             combinationResponses = saveOption.getCombinationResponse();
-        }else {
+        } else {
             OptionListResponse saveOption = optionService.getOption(customUserDetails, product);
 
             detailedOptionResponses = saveOption.getDetailedOptionResponse();
@@ -168,13 +171,13 @@ public class ProductService {
 
         return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
     }
-    
+
     private ProductRegisterResponse toProductResponse(Product product,
-                                               List<ProductColorResponse> productColors,
-                                               List<DetailedOptionResponse> detailedOptionResponses,
-                                               List<OptionCombinationResponse> combinationResponses,
-                                               List<ProductImageResponse> productImages,
-                                               List<ProductGuideInfoResponse> productGuideInfos){
+                                                      List<ProductColorResponse> productColors,
+                                                      List<DetailedOptionResponse> detailedOptionResponses,
+                                                      List<OptionCombinationResponse> combinationResponses,
+                                                      List<ProductImageResponse> productImages,
+                                                      List<ProductGuideInfoResponse> productGuideInfos) {
 
         return ProductRegisterResponse.builder()
                 .productId(product.getId())
@@ -204,17 +207,18 @@ public class ProductService {
                 .build();
     }
 
-    public SearchResult<ProductSearchResponse> getProductSearchList(CustomUserDetails customUserDetails, ProductSearchRequest request, Pageable pageable){
+    public SearchResult<ProductSearchResponse> getProductSearchList(CustomUserDetails customUserDetails, ProductSearchRequest request, Pageable pageable) {
         globalService.validateAdmin(customUserDetails);
+        List<Long> idList = findAllDescendantCategoryIds(request.getCategoryId());
 
         QProduct product = QProduct.product;
-        QProductImage image = productImage;
+        QOption option = QOption.option;
         BooleanBuilder builder = new BooleanBuilder();
 
         if (request.getProductStatus() == null || request.getProductStatus() == ProductStatus.ACTIVE) {
-            builder.and(product.productStatus.eq(ProductStatus.ACTIVE));
+            builder.and(option.productStatus.eq(ProductStatus.ACTIVE));
         } else {
-            builder.and(product.productStatus.eq(request.getProductStatus()));
+            builder.and(option.productStatus.eq(request.getProductStatus()));
         }
 
         if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
@@ -232,68 +236,65 @@ public class ProductService {
 
         if (request.getRegisterDate() != null) {
             if (request.getRegisterDate().getStartDate() != null) {
-                builder.and(product.createdAt.goe(request.getRegisterDate().getStartDate().atStartOfDay()));
+                builder.and(option.createdAt.goe(request.getRegisterDate().getStartDate().atStartOfDay()));
             }
             if (request.getRegisterDate().getEndDate() != null) {
-                builder.and(product.createdAt.loe(request.getRegisterDate().getEndDate().atTime(23, 59, 59)));
+                builder.and(option.createdAt.loe(request.getRegisterDate().getEndDate().atTime(23, 59, 59)));
             }
         }
 
         if (request.getCategoryId() != null) {
-            builder.and(product.categoryId.eq(request.getCategoryId()));
+            builder.and(product.categoryId.in(idList));
         }
 
         if (request.getBrandType() != null) {
             builder.and(product.brand.eq(request.getBrandType()));
         }
 
-        if (request.getMinPrice() != null){
+        if (request.getMinPrice() != null) {
             builder.and(product.salePrice.goe(request.getMinPrice()));
         }
 
-        if (request.getMaxPrice() != null){
+        if (request.getMaxPrice() != null) {
             builder.and(product.salePrice.loe(request.getMaxPrice()));
         }
 
-        JPQLQuery<ProductSearchResponse> query = queryFactory
-                .select(new QProductSearchResponse(
-                        product.id,
-                        product.productCode,
-                        product.productName,
-                        product.status,
-                        image.imageUrl,
-                        product.salePrice,
-                        product.originalPrice,
-                        product.mileageType,
-                        product.mileageRate
-                ))
-                .from(product)
-                .leftJoin(image).on(image.product.eq(product).and(image.imageType.eq(ImageType.THUMBNAIL)))
-                .where(builder);
-
-        if (pageable.getSort().isEmpty()) {
-            query.orderBy(product.createdAt.desc());
-        } else {
-            PathBuilder<?> pathBuilder = new PathBuilder<>(Product.class, "product");
-
-            for (Sort.Order order : pageable.getSort()) {
-                Order direction = order.isAscending() ? Order.ASC : Order.DESC;
-                String property = order.getProperty();
-                Expression<?> expression = pathBuilder.get(property);
-                query.orderBy(new OrderSpecifier<>(direction, (Expression<Comparable>) expression));
-            }
-        }
-
-        long totalCount = queryFactory
-                .select(product.count())
-                .from(product)
+        List<Option> options = queryFactory
+                .selectFrom(option)
+                .join(option.product, product).fetchJoin()
                 .where(builder)
-                .fetchOne();
-
-        List<ProductSearchResponse> responses = query
+                .orderBy(option.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+
+        List<ProductSearchResponse> responses = options.stream()
+                .map(o -> {
+                    BigDecimal salePrice = o.getProduct().getSalePrice().add(o.getPrice());
+                    BigDecimal originalPrice = o.getProduct().getOriginalPrice().add(o.getPrice());
+                    BigDecimal discountRate = calculateDiscountRate(salePrice, originalPrice);
+                    String discount = discountRate.toPlainString() + "%";
+
+                    return ProductSearchResponse.builder()
+                            .productId(o.getProduct().getId())
+                            .optionId(o.getId())
+                            .optionCode(o.getOptionCode())
+                            .imageUrl(o.getImageUrl())
+                            .productName(o.getProduct().getProductName() +"/"+ o.getOptionName())
+                            .status(o.getStatus())
+                            .salePrice(salePrice)
+                            .originalPrice(originalPrice)
+                            .registerAt(o.getCreatedAt())
+                            .updatedAt(o.getUpdatedAt())
+                            .discountRate(discount)
+                            .build();
+                }).collect(Collectors.toList());
+
+        Long totalCount = queryFactory
+                .select(option.count())
+                .from(option)
+                .where(builder)
+                .fetchOne();
 
         return SearchResult.<ProductSearchResponse>builder()
                 .totalCount(totalCount)
@@ -302,6 +303,7 @@ public class ProductService {
                 .data(responses)
                 .build();
     }
+
     public SearchResult<ProductAddSearchResponse> addProductSearch(CustomUserDetails customUserDetails, ProductAddRequest request, Pageable pageable) {
         globalService.validateAdmin(customUserDetails);
 
@@ -323,7 +325,7 @@ public class ProductService {
                 }
             }
         }
-        if(request.getLastCategoryId() != null) {
+        if (request.getLastCategoryId() != null) {
             List<Long> categoryIds = findAllDescendantCategoryIds(request.getLastCategoryId());
             builder.and(product.categoryId.in(categoryIds));
         }
@@ -366,7 +368,7 @@ public class ProductService {
                         .build()
                 ).collect(Collectors.toList());
 
-        return SearchResult.<ProductAddSearchResponse> builder()
+        return SearchResult.<ProductAddSearchResponse>builder()
                 .totalCount(totalCount)
                 .page(pageable.getPageNumber())
                 .size(pageable.getPageSize())
@@ -374,7 +376,7 @@ public class ProductService {
                 .build();
     }
 
-    public ProductAddDto getProductDetail(CustomUserDetails customUserDetails, Long productId){
+    public ProductAddDto getProductDetail(CustomUserDetails customUserDetails, Long productId) {
         globalService.validateAdmin(customUserDetails);
 
         Product product = productRepository.findById(productId)
@@ -384,7 +386,7 @@ public class ProductService {
 
         List<OptionAddResponse> optionResponse = new ArrayList<>();
 
-        if(product.getOptionUsage()){
+        if (product.getOptionUsage()) {
             optionResponse = optionService.getOptionsForProduct(product);
         }
 
@@ -404,88 +406,89 @@ public class ProductService {
     }
 
     @Transactional
-    public List<ProductStockResponse> updateOutStock(CustomUserDetails customUserDetails, IdListRequest request){
+    public List<ProductStockResponse> updateOutStock(CustomUserDetails customUserDetails, IdListRequest request) {
         globalService.validateAdmin(customUserDetails);
 
-        List<Product> productList = productRepository.findAllById(request.getProductIdList());
+        List<Option> productList = optionRepository.findAllById(request.getProductIdList());
 
-        productList.forEach(product -> product.updateStock(StockStatus.OUT_STOCK, customUserDetails.getId()));
+        productList.forEach(product -> product.updateStatus(StockStatus.OUT_STOCK, customUserDetails.getId()));
 
         return productList.stream()
                 .map(product -> ProductStockResponse.builder()
-                        .productId(product.getId())
-                        .productName(product.getProductName())
-                        .productCode(product.getProductCode())
+                        .optionId(product.getId())
+                        .optionCode(product.getOptionCode())
+                        .optionName(product.getProduct().getProductName() +"/"+ product.getOptionName())
                         .status(product.getStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
 
     @Transactional
-    public List<ProductStockResponse> updateInStock(CustomUserDetails customUserDetails, IdListRequest request){
+    public List<ProductStockResponse> updateInStock(CustomUserDetails customUserDetails, IdListRequest request) {
         globalService.validateAdmin(customUserDetails);
 
-        List<Product> productList = productRepository.findAllById(request.getProductIdList());
+        List<Option> productList = optionRepository.findAllById(request.getProductIdList());
 
-        productList.forEach(product -> product.updateStock(StockStatus.IN_STOCK, customUserDetails.getId()));
+        productList.forEach(product -> product.updateStatus(StockStatus.IN_STOCK, customUserDetails.getId()));
 
         return productList.stream()
                 .map(product -> ProductStockResponse.builder()
-                        .productId(product.getId())
-                        .productName(product.getProductName())
-                        .productCode(product.getProductCode())
+                        .optionId(product.getId())
+                        .optionCode(product.getOptionCode())
+                        .optionName(product.getProduct().getProductName() +"/"+ product.getOptionName())
                         .status(product.getStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
 
     @Transactional
-    public List<ProductDeactiveResponse> updateDeactivate(CustomUserDetails customUserDetails,IdListRequest request){
+    public List<ProductDeactiveResponse> updateDeactivate(CustomUserDetails customUserDetails, IdListRequest request) {
         globalService.validateAdmin(customUserDetails);
 
-        List<Product> productList = productRepository.findAllById(request.getProductIdList());
+        List<Option> productList = optionRepository.findAllById(request.getProductIdList());
 
         productList.forEach(product -> product.deactivate(ProductStatus.DELETE, customUserDetails.getId()));
 
         return productList.stream()
                 .map(product -> ProductDeactiveResponse.builder()
-                        .productId(product.getId())
-                        .productName(product.getProductName())
-                        .productCode(product.getProductCode())
+                        .optionId(product.getId())
+                        .optionCode(product.getOptionCode())
+                        .optionName(product.getProduct().getProductName() +"/"+ product.getOptionName())
                         .status(product.getProductStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
 
     @Transactional
-    public List<ProductDeactiveResponse> updateRestore(CustomUserDetails customUserDetails,IdListRequest request){
+    public List<ProductDeactiveResponse> updateRestore(CustomUserDetails customUserDetails, IdListRequest request) {
         globalService.validateAdmin(customUserDetails);
 
-        List<Product> productList = productRepository.findAllById(request.getProductIdList());
+        List<Option> productList = optionRepository.findAllById(request.getProductIdList());
 
         productList.forEach(product -> product.deactivate(ProductStatus.ACTIVE, customUserDetails.getId()));
 
         return productList.stream()
                 .map(product -> ProductDeactiveResponse.builder()
-                        .productId(product.getId())
-                        .productName(product.getProductName())
-                        .productCode(product.getProductCode())
+                        .optionId(product.getId())
+                        .optionCode(product.getOptionCode())
+                        .optionName(product.getProduct().getProductName() +"/"+ product.getOptionName())
                         .status(product.getProductStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
 
-    public SearchResult<ProductSearchResponse> getProductManageList(CustomUserDetails customUserDetails, ProductBatchRequest request, Pageable pageable){
+    public SearchResult<ProductSummaryResponse> getProductStockList(CustomUserDetails customUserDetails, ProductBatchRequest request, Pageable pageable) {
         globalService.validateAdmin(customUserDetails);
 
         QProduct product = QProduct.product;
-        QProductImage image = productImage;
-        BooleanBuilder builder = new BooleanBuilder();
+        QOption option = QOption.option;
+        BooleanBuilder builder = new BooleanBuilder()
+                .and(option.status.eq(StockStatus.OUT_STOCK));
 
         if (request.getProductStatus() == null || request.getProductStatus() == ProductStatus.ACTIVE) {
-            builder.and(product.productStatus.eq(ProductStatus.ACTIVE));
+            builder.and(option.productStatus.eq(ProductStatus.ACTIVE));
         } else {
-            builder.and(product.productStatus.eq(request.getProductStatus()));
+            builder.and(option.productStatus.eq(request.getProductStatus()));
         }
 
         if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
@@ -510,55 +513,34 @@ public class ProductService {
             }
         }
 
-        if(request.getOutStock() != null) {
-            if (Boolean.TRUE.equals(request.getOutStock())) {
-                builder.and(product.status.eq(StockStatus.OUT_STOCK));
-            } else if (Boolean.FALSE.equals(request.getOutStock())) {
-                builder.and(product.status.eq(StockStatus.IN_STOCK));
-            }
-        }
-
-        JPQLQuery<ProductSearchResponse> query = queryFactory
-                .select(new QProductSearchResponse(
-                        product.id,
-                        product.productCode,
-                        product.productName,
-                        product.status,
-                        image.imageUrl,
-                        product.salePrice,
-                        product.originalPrice,
-                        product.mileageType,
-                        product.mileageRate
-                ))
-                .from(product)
-                .leftJoin(image).on(image.product.eq(product).and(image.imageType.eq(ImageType.THUMBNAIL)))
-                .where(builder);
-
-        if (pageable.getSort().isEmpty()) {
-            query.orderBy(product.createdAt.desc());
-        } else {
-            PathBuilder<?> pathBuilder = new PathBuilder<>(Product.class, "product");
-
-            for (Sort.Order order : pageable.getSort()) {
-                Order direction = order.isAscending() ? Order.ASC : Order.DESC;
-                String property = order.getProperty();
-                Expression<?> expression = pathBuilder.get(property);
-                query.orderBy(new OrderSpecifier<>(direction, (Expression<Comparable>) expression));
-            }
-        }
-
-        Long totalCount = queryFactory
-                .select(product.count())
-                .from(product)
+        List<Option> options = queryFactory
+                .selectFrom(option)
+                .join(option.product, product).fetchJoin()
                 .where(builder)
-                .fetchOne();
-
-        List<ProductSearchResponse> responses = query
+                .orderBy(option.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        return SearchResult.<ProductSearchResponse>builder()
+        List<ProductSummaryResponse> responses = options.stream()
+                .map(o -> ProductSummaryResponse.builder()
+                            .productId(o.getProduct().getId())
+                            .optionId(o.getId())
+                            .optionCode(o.getOptionCode())
+                            .imageUrl(o.getImageUrl())
+                            .productName(o.getProduct().getProductName())
+                            .optionName(o.getOptionName())
+                            .status(o.getStatus())
+                            .build()
+                ).collect(Collectors.toList());
+
+        Long totalCount = queryFactory
+                .select(option.count())
+                .from(option)
+                .where(builder)
+                .fetchOne();
+
+        return SearchResult.<ProductSummaryResponse>builder()
                 .totalCount(totalCount)
                 .page(pageable.getPageNumber())
                 .size(pageable.getPageSize())
@@ -567,8 +549,9 @@ public class ProductService {
 
     }
 
+    /*
     @Transactional
-    public List<ProductDeactiveResponse> updatePrice(CustomUserDetails customUserDetails, PriceBatchChangeRequest request){
+    public List<ProductDeactiveResponse> updatePrice(CustomUserDetails customUserDetails, PriceBatchChangeRequest request) {
         globalService.validateAdmin(customUserDetails);
 
         List<Product> productList = productRepository.findAllById(request.getProductIdList());
@@ -577,13 +560,14 @@ public class ProductService {
 
         return productList.stream()
                 .map(product -> ProductDeactiveResponse.builder()
-                        .productId(product.getId())
-                        .productName(product.getProductName())
-                        .productCode(product.getProductCode())
+                        .optionId(product.getId())
+                        .optionCode(product.getOptionCode())
+                        .optionName(product.getProduct().getProductName() + product.getOptionName())
                         .status(product.getProductStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
+    */
 
     public SearchResult<ProductDisplayResponse> getDisplay(CustomUserDetails customUserDetails, Long categoryId, Pageable pageable) {
         globalService.validateAdmin(customUserDetails);
@@ -646,7 +630,6 @@ public class ProductService {
                 .build();
 
     }
-
     public List<Long> findAllDescendantCategoryIds(Long parentId) {
         List<Long> result = new ArrayList<>();
         collectChildren(parentId, result);
@@ -679,10 +662,8 @@ public class ProductService {
             throw new CustomException(ErrorCode.DUPLICATE_ORDER_VALUE);
         }
 
-        // 2. 기존 category_display 삭제
         categoryDisplayRepository.deleteAllByCategoryId(category.getId());
 
-        // 3. 요청 기반 productId → request 매핑
         Map<Long, ProductOrderUpdateRequest> requestMap = requests.stream()
                 .collect(Collectors.toMap(ProductOrderUpdateRequest::getProductId, Function.identity()));
 
@@ -733,6 +714,7 @@ public class ProductService {
     }
 
 
+
     @Transactional
     public ProductDisplayResponse togglePinned(CustomUserDetails customUserDetails, Long productId) {
         globalService.validateAdmin(customUserDetails);
@@ -756,10 +738,24 @@ public class ProductService {
                 .build();
     }
 
-    private ProductImage getThumbNail(Product product){
-        return  product.getProductImages().stream()
+    private ProductImage getThumbNail(Product product) {
+        return product.getProductImages().stream()
                 .filter(p -> p.getImageType().equals(ImageType.THUMBNAIL))
                 .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
     }
+
+    public static BigDecimal calculateDiscountRate(BigDecimal a, BigDecimal b) {
+
+        BigDecimal max = a.max(b);
+        BigDecimal min = a.min(b);
+
+        BigDecimal discountRate = BigDecimal.ONE
+                .subtract(min.divide(max, 10, RoundingMode.HALF_UP))
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        return discountRate;
+    }
+
 }

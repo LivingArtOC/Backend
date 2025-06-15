@@ -11,5 +11,4 @@ public class ProductBatchRequest {
     private String keyword;
     private DateSearchDto registerDate;
     private ProductStatus productStatus;
-    private Boolean outStock;
 }

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderOpInfoResponse {
-    private Long optionId;
     private String optionName;
     private String optionValue;
 }

@@ -20,9 +20,12 @@ public class AdminActionLog extends BaseTime {
 
     private Long adminId;         // 운영자 ID(행위자)
     private String adminLoginId;  // 운영자 아이디(행위자)
+
+    @Enumerated(EnumType.STRING)
     private ActionType actionType;    // GET , UPDATE, DELETE
     private String page;          // 요청 URI
     private String targetTable;   // 예: "user", "admin"
     private Long targetId;        // 조작 대상 ID
     private String ipAddress;     // 운영자 IP
+    private String description;
 }

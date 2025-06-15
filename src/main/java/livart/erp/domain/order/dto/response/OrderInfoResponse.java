@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Getter @Builder
 @AllArgsConstructor
@@ -25,6 +26,7 @@ public class OrderInfoResponse {
     private LocalDate orderDate;
     private String productName;
     private Long productId;
+    private String thumbNailImgUrl;
     private BrandType brand;
-    private List<OrderOpInfoResponse> orderOption;
+    private Set<OrderOpInfoResponse> orderOption;
 }

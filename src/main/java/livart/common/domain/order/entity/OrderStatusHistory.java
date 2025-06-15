@@ -22,7 +22,7 @@ public class OrderStatusHistory {
     private OrderItem orderItem;
 
     @Enumerated(EnumType.STRING)
-    private OrderItemStatus status;
+    private OrderStatus status;
 
     private String memo; // 변경 사유, 관리자 입력 메시지
 

@@ -2,6 +2,7 @@ package livart.erp.client.sms;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import livart.common.dto.response.ApiResponse;
 import livart.common.exception.CustomException;
@@ -28,8 +29,9 @@ public class SmsController {
 
     @PostMapping("/verify")
     @Operation(summary = "✅ 휴대폰 인증번호 유효성 검사 API, 토큰 x")
-    public ResponseEntity<ApiResponse<String>> verify(@RequestBody @Valid OtpVerifyRequest request) {
-        smsService.verifyOtp(request);
+    public ResponseEntity<ApiResponse<String>> verify(@RequestBody @Valid OtpVerifyRequest request,
+                                                      HttpSession session) {
+        smsService.verifyOtp(request, session);
         return ResponseEntity.ok(ApiResponse.ok("인증이 완료되었습니다."));
     }
 }

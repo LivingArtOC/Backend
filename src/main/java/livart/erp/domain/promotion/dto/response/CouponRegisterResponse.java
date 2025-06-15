@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -25,7 +26,7 @@ public class CouponRegisterResponse {
     private LocalDate expireEndDate;
     private Long issuedDate;
     private CouponDiscountType couponDiscountType;
-    private Long discountPrice;
+    private BigDecimal discountPrice;
     private Boolean expiredMessage;
     private Integer minOrderPrice;
 }

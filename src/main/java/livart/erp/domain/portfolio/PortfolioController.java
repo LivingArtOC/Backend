@@ -28,15 +28,15 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "납품 사례 및 세금 계산서 관련 API")
+@Tag(name = "납품 사례 및 세금 계산서 관련 API",description = "✅ 개발 완료")
 @RequestMapping("api/erp/sub-order")
 public class PortfolioController {
     private final PortfolioService portfolioService;
     private final OrderService orderService;
 
 
-    @PostMapping("/order/info")
-    @Operation(summary = "거래 정보 불러오기 API, 토큰 O")
+    @PostMapping("/order/search")
+    @Operation(summary = "✅ 거래 정보 불러오기 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<OrderInfoResponse>>> getOrderInfo(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody OrderSearchRequest request,
@@ -48,7 +48,7 @@ public class PortfolioController {
     }
 
     @PostMapping("/portfolio")
-    @Operation(summary = "납품 사례 등록 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 등록 API, 토큰 O")
     public ResponseEntity<ApiResponse<PfResponse>> registerPortfolio(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody PfRegisterRequest request){
@@ -58,7 +58,7 @@ public class PortfolioController {
     }
 
     @GetMapping("/portfolio/{portfolioId}")
-    @Operation(summary = "납품 사례 조회 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<PfResponse>> getPortfolio(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PathVariable Long portfolioId){
@@ -68,7 +68,7 @@ public class PortfolioController {
     }
 
     @PutMapping("/portfolio/{portfolioId}")
-    @Operation(summary = "납품 사례 수정 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<PfResponse>> updatePortfolio(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PathVariable Long portfolioId,
@@ -79,7 +79,7 @@ public class PortfolioController {
     }
 
     @PutMapping("/portfolio/status")
-    @Operation(summary = "납품 사례 리스트 상태 변경(삭제 OR 등록) 처리 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 리스트 상태 변경(삭제 OR 등록) 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<PfStatusResponse>>> UpdateStatusPf(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                               @RequestBody PfStatusRequest request){
         List<PfStatusResponse> responses = portfolioService.updateStatusPf(customUserDetails, request);
@@ -87,7 +87,7 @@ public class PortfolioController {
     }
 
     @PostMapping("/portfolio/search")
-    @Operation(summary = "납품 목록 검색 API, 토큰 O")
+    @Operation(summary = "✅ 납품 목록 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<PfSearchResponse>>> searchPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody PfSearchRequest request,
@@ -99,7 +99,7 @@ public class PortfolioController {
     }
 
     @PostMapping("/porfolio/display")
-    @Operation(summary = "납품 사례 진열 관리 조회 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 진열 관리 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<PfDisplayResponse>>> getDisplayPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody PfSearchRequest request,
@@ -111,7 +111,7 @@ public class PortfolioController {
     }
 
     @PutMapping("/porfolio/display")
-    @Operation(summary = "납품 사례 진열 관리 수정 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 진열 관리 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<PfDisplayUpdateResponse>>> updateDisplayPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody List<DisplayUpdateRequest> request) {
@@ -121,7 +121,7 @@ public class PortfolioController {
     }
 
     @PutMapping("/porfolio/pin/{portfolioId}")
-    @Operation(summary = "납품 사례 상단 고정 토글 API, 토큰 O")
+    @Operation(summary = "✅ 납품 사례 상단 고정 토글 API, 토큰 O")
     public ResponseEntity<ApiResponse<PfDisplayUpdateResponse>> togglePinned(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PathVariable Long portfolioId) {

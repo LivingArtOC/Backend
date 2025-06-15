@@ -3,6 +3,7 @@ package livart.shop.client.biz;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import livart.common.client.biz.BizCheckClient;
+import livart.common.client.biz.BizCheckResponse;
 import livart.common.dto.response.ApiResponse;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
@@ -22,13 +23,10 @@ public class BizCheckController {
 
     private final BizCheckClient bizCheckClient;
 
-    @GetMapping("/biz/validate")
+    @PutMapping("/biz/validate")
     @Operation(summary = "사업자 등록상태 조회 API", description = "공공데이터 포털 제공 사업자 등록 상태 조회 API입니다.")
-    public ResponseEntity<ApiResponse<BusinessStatusRequest>> validateBusiness(@RequestBody BusinessStatusRequest businessStatusRequest) {
-        boolean isValid = bizCheckClient.isValidBizNumber(businessStatusRequest.getBizNum());
-        if (!isValid) {
-            throw new CustomException(ErrorCode.INVALID_BIZ_NUMBER);
-        }
-        return ResponseEntity.status(HttpStatus.FOUND).body(ApiResponse.ok(businessStatusRequest));
+    public ResponseEntity<ApiResponse<BizCheckResponse>> validateBusiness(@RequestBody BusinessStatusRequest businessStatusRequest) {
+        BizCheckResponse response = bizCheckClient.isValidBizNumber(businessStatusRequest);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

@@ -93,11 +93,6 @@ public class Product extends BaseTime {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetailedOption> detailedOptions = new ArrayList<>();
 
-    public void updateStock(StockStatus status, Long updatedBy){
-        this.status = status;
-        this.updatedBy = updatedBy;
-    }
-
     public void deactivate(ProductStatus status, Long updatedBy) {
         this.productStatus = status;
         this.updatedBy = updatedBy;

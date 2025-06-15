@@ -54,7 +54,6 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getPassword() {
-        log.info("✅ getPassword()에서 반환하는 값: {}", user.getPassword());
         return user.getPassword();
     }
 

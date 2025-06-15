@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.*;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,7 @@ public class DesignService {
         checkDuplicate(request);
 
         List<ProductBanner> bannerList = request.stream()
+                .sorted(Comparator.comparing(ImageListDto::getOrderIndex))
                 .map(image -> ProductBanner.builder()
                                 .fileName(image.getFileName())
                                 .imageUrl(image.getImageUrl())
@@ -97,6 +99,8 @@ public class DesignService {
                 ).collect(Collectors.toList());
 
         List<ProductBannerResponse> savedList = productBannerRepository.saveAll(bannerList).stream()
+                .sorted(Comparator.comparing(ProductBanner::getOrderIndex))
+
                 .map(banner -> ProductBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
@@ -111,6 +115,7 @@ public class DesignService {
         globalService.validateAdmin(customUserDetails);
 
         List<ProductBannerResponse> bannerList = productBannerRepository.findAll().stream()
+                .sorted(Comparator.comparing(ProductBanner::getOrderIndex))
                 .map(banner -> ProductBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
@@ -252,7 +257,7 @@ public class DesignService {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        long totalCount = jpaQueryFactory
+        Long totalCount = jpaQueryFactory
                 .select(popup.count())
                 .from(popup)
                 .where(builder)
@@ -367,6 +372,7 @@ public class DesignService {
 
         List<InteriorsImage> imageList = request.getImageList()
                 .stream()
+                .sorted(Comparator.comparing(ImageListDto::getOrderIndex))
                 .map(dto -> InteriorsImage.builder()
                         .fileName(dto.getFileName())
                         .imageUrl(dto.getImageUrl())
@@ -378,6 +384,7 @@ public class DesignService {
         List<InteriorsImage> savedImage = interiorsImageRepository.saveAll(imageList);
 
         List<ImageListDto> imageLists = savedImage.stream()
+                .sorted(Comparator.comparing(InteriorsImage::getOrderIndex))
                 .map(image -> ImageListDto.builder()
                         .fileName(image.getFileName())
                         .imageUrl(image.getImageUrl())
@@ -403,6 +410,7 @@ public class DesignService {
         InteriorsInfo info = interiorsInfoRepository.findById(1L).orElseThrow(() -> new CustomException(ErrorCode.INTERIOR_INFO_NOT_FOUND));
 
         List<ImageListDto> imageLists = imageList.stream()
+                .sorted(Comparator.comparing(InteriorsImage::getOrderIndex))
                 .map(image -> ImageListDto.builder()
                         .fileName(image.getFileName())
                         .imageUrl(image.getImageUrl())
@@ -438,6 +446,7 @@ public class DesignService {
         checkDuplicate(request);
 
         List<MainBanner> bannerList = request.stream()
+                .sorted(Comparator.comparing(ImageListDto::getOrderIndex))
                 .map(image -> MainBanner.builder()
                         .fileName(image.getFileName())
                         .imageUrl(image.getImageUrl())
@@ -447,6 +456,7 @@ public class DesignService {
                 ).collect(Collectors.toList());
 
         List<MainBannerResponse> savedList = mainBannerRepository.saveAll(bannerList).stream()
+                .sorted(Comparator.comparing(MainBanner::getOrderIndex))
                 .map(banner -> MainBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
@@ -461,6 +471,7 @@ public class DesignService {
         globalService.validateAdmin(customUserDetails);
 
         List<MainBannerResponse> bannerList = mainBannerRepository.findAll().stream()
+                .sorted(Comparator.comparing(MainBanner::getOrderIndex))
                 .map(banner -> MainBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())

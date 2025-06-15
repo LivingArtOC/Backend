@@ -5,6 +5,7 @@ import livart.common.domain.user.repository.BusinessRepository;
 import livart.common.domain.user.repository.UserRepository;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
+import livart.shop.client.biz.BusinessStatusRequest;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,9 +30,9 @@ public class BizCheckClient {
 
     private static final String API_URL = "https://api.odcloud.kr/api/nts-businessman/v1/status";
 
-    public boolean isValidBizNumber(String bizNumber) {
+    public BizCheckResponse isValidBizNumber(BusinessStatusRequest request) {
 
-        businessRepository.findBusinessByBizRegistrationNum(bizNumber)
+        businessRepository.findBusinessByBizRegistrationNum(request.getBizNum())
                 .ifPresent(u -> { throw new CustomException(ErrorCode.DUPLICATE_BIZ_NUM); });
 
         String url = API_URL + "?serviceKey=" + serviceKey;
@@ -40,24 +41,45 @@ public class BizCheckClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         JSONObject body = new JSONObject();
-        body.put("b_no", List.of(bizNumber)); // 여러 개도 가능
+        body.put("b_no", List.of(request.getBizNum())); // 여러 개도 가능
 
-        HttpEntity<String> request = new HttpEntity<>(body.toString(), headers);
+        HttpEntity<String> http = new HttpEntity<>(body.toString(), headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
-                request,
+                http,
                 String.class
         );
 
         try {
             JSONObject result = new JSONObject(response.getBody());
             JSONArray data = result.getJSONArray("data");
-            if (data.length() == 0) return false;
 
-            String status = data.getJSONObject(0).getString("b_stt");
-            return status.equals("계속사업자"); // 유효한 사업자
+            if (data.length() == 0) {
+                throw new CustomException(ErrorCode.INVALID_BIZ_NUMBER);
+            }
+
+            JSONObject item = data.getJSONObject(0);
+            String status = item.optString("b_stt");
+
+            if (!"계속사업자".equals(status)) {
+                throw new CustomException(ErrorCode.INVALID_BIZ_NUMBER);
+            }
+
+
+            String bizStatus = item.optString("b_type");  // 업태
+            String bizType = item.optString("b_item");    // 종목
+
+            return BizCheckResponse.builder()
+                    .isExist(true)
+                    .bizStatus(bizStatus)
+                    .bizType(bizType)
+                    .bizNum(request.getBizNum())
+                    .bizName(request.getBizName())
+                    .ownerName(request.getOwnerName())
+                    .build();
+
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INVALID_BIZ_NUMBER);
         }

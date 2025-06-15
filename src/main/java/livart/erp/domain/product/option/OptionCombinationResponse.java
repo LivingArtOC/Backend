@@ -19,6 +19,8 @@ public class OptionCombinationResponse {
     private String optionCode;
     private Boolean isExposed;
     private StockStatus status;
+    private String imageUrl;
+    private String fileName;
 
     private List<OptionResponse> optionResponseList;
 }

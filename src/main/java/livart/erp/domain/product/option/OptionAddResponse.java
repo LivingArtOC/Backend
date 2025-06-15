@@ -22,6 +22,7 @@ public class OptionAddResponse {
     private String optionCode;
     private Boolean isExposed;
     private StockStatus status;
+    private String imageUrl;
 
     private List<OptionResponse> optionResponseList;
 }

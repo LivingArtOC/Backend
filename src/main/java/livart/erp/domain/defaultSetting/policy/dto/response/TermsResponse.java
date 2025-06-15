@@ -1,5 +1,6 @@
 package livart.erp.domain.defaultSetting.policy.dto.response;
 
+import livart.common.dto.enums.term.TermSuperType;
 import livart.common.dto.enums.term.TermType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TermsResponse {
     private Long termId;
+    private TermSuperType superType;
     private TermType type;
     private Boolean required;
     private String title;

@@ -11,6 +11,7 @@ import livart.common.dto.enums.user.Role;
 import livart.common.dto.enums.user.UserStatus;
 import livart.common.log.entity.MileageLog;
 import livart.common.log.entity.UserStatusLog;
+import livart.erp.domain.defaultSetting.admin.dto.request.AdminRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.*;
@@ -31,15 +32,20 @@ public class User extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String userName;
 
     @Column(unique = true)
     private String loginId; // 일반 로그인 ID
 
     private String password; // 일반 로그인 비밀번호
 
+    @Column(unique = true, nullable = false)
+    private String phoneNum; // 전화 번호
+
     @Builder.Default
     private Boolean recoverable = true; // 재가입(복구 가능 여부)
 
+    @Column(unique = true)
     private String email;
 
     @Builder.Default
@@ -64,6 +70,12 @@ public class User extends BaseTime {
     @Column(unique = true)
     private String socialId;
 
+    @Lob
+    private String adminMemo;
+
+    @Setter
+    private LocalDateTime dormantAt;
+
     @Setter
     private LocalDateTime lastLoginAt;
     @Setter
@@ -84,6 +96,7 @@ public class User extends BaseTime {
     private List<UserMKConsent> userMarketingNotices = new ArrayList<>();
 
     @Builder.Default
+    @OrderBy("createdAt DESC")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserStatusLog> userStatusLogs = new ArrayList<>();
 
@@ -103,6 +116,20 @@ public class User extends BaseTime {
     public void updateMileageByAdmin(Integer mileage, Long updatedBy) {
         this.mileage = mileage;
         this.updatedBy = updatedBy;
+    }
+
+    public void updateMemo(String adminMemo, Long updatedBy){
+        this.adminMemo = adminMemo;
+        this.updatedBy = updatedBy;
+    }
+
+    public void updateUserFieldsFrom(AdminRequest request, String encodedPassword) {
+        this.loginId = request.getLoginId();
+        this.password = encodedPassword;
+        this.phoneNum = request.getPhoneNum();
+        this.email = request.getEmail();
+        this.userName = request.getAdminName();
+        this.adminMemo = request.getAdminMemo();
     }
 }
 

@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "제품 카테고리 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "제품 카테고리 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp")
 public class CategoryController {
 

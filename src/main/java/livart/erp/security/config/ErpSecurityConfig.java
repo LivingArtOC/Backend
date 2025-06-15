@@ -4,6 +4,7 @@ import livart.common.Auth.repository.RefreshTokenRepository;
 import livart.common.Auth.util.JwtTokenProvider;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
 import livart.common.domain.user.repository.AdminRepository;
+import livart.common.domain.user.repository.RestrictIpRepository;
 import livart.common.domain.user.repository.UserRepository;
 import livart.common.log.repository.LoginHistoryRepository;
 import livart.erp.security.ErpJwtAuthenticationFilter;
@@ -38,6 +39,7 @@ public class ErpSecurityConfig {
     private final LoginHistoryRepository loginHistoryRepository;
     private final AllowedAdminIpsRepository allowedAdminIpsRepository;
     private final AdminRepository adminRepository;
+    private final RestrictIpRepository restrictIpRepository;
 
     public ErpSecurityConfig(JwtTokenProvider jwtTokenProvider,
                              RefreshTokenRepository refreshTokenRepository,
@@ -46,6 +48,7 @@ public class ErpSecurityConfig {
                              AuthenticationConfiguration authenticationConfiguration,
                              LoginHistoryRepository loginHistoryRepository,
                              AllowedAdminIpsRepository allowedAdminIpsRepository,
+                             RestrictIpRepository restrictIpRepository,
                              @Qualifier("erpCorsConfigurationSource") CorsConfigurationSource corsConfigurationSource) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -53,6 +56,7 @@ public class ErpSecurityConfig {
         this.adminRepository = adminRepository;
         this.authenticationConfiguration = authenticationConfiguration;
         this.corsConfigurationSource = corsConfigurationSource;
+        this.restrictIpRepository = restrictIpRepository;
         this.loginHistoryRepository = loginHistoryRepository;
         this.allowedAdminIpsRepository = allowedAdminIpsRepository;
     }
@@ -87,6 +91,7 @@ public class ErpSecurityConfig {
                         userRepository,
                         loginHistoryRepository,
                         allowedAdminIpsRepository,
+                        restrictIpRepository,
                         adminRepository
                 ), UsernamePasswordAuthenticationFilter.class);
 

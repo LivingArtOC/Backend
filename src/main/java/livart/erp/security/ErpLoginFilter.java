@@ -13,9 +13,12 @@ import livart.common.Auth.util.JwtTokenProvider;
 import livart.common.domain.setting.entity.AllowedAdminIp;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
 import livart.common.domain.user.entity.Admin;
+import livart.common.domain.user.entity.RestrictIp;
 import livart.common.domain.user.entity.User;
 import livart.common.domain.user.repository.AdminRepository;
+import livart.common.domain.user.repository.RestrictIpRepository;
 import livart.common.domain.user.repository.UserRepository;
+import livart.common.dto.enums.user.RestrictReason;
 import livart.common.dto.enums.user.Role;
 import livart.common.dto.enums.user.UserStatus;
 import livart.common.exception.CustomException;
@@ -30,12 +33,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -48,12 +54,15 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AllowedAdminIpsRepository allowedAdminIpsRepository;
     private final AdminRepository adminRepository;
 
+    private final RestrictIpRepository restrictIpRepository;
+
     public ErpLoginFilter(AuthenticationManager authenticationManager,
                           JwtTokenProvider jwtTokenProvider,
                           RefreshTokenRepository refreshTokenRepository,
                           UserRepository userRepository,
                           LoginHistoryRepository loginHistoryRepository,
                           AllowedAdminIpsRepository allowedAdminIpsRepository,
+                          RestrictIpRepository restrictIpRepository,
                           AdminRepository adminRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -61,19 +70,18 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
         this.userRepository = userRepository;
         this.adminRepository = adminRepository;
         this.loginHistoryRepository = loginHistoryRepository;
+        this.restrictIpRepository = restrictIpRepository;
         this.allowedAdminIpsRepository = allowedAdminIpsRepository;
         setFilterProcessesUrl("/api/erp/auth/login");   // 로그인 요청 URI
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        try {
-            if (request.getInputStream() == null || request.getContentLength() <= 0) {
-                throw new CustomException(ErrorCode.NULL_INPUT_VALUE);
-            }
+        LoginRequest loginRequest = null;
 
+        try {
             ObjectMapper objectMapper = new ObjectMapper();
-            LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
+            loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
 
             if (loginRequest.getLoginId() == null || loginRequest.getPassword() == null) {
                 throw new CustomException(ErrorCode.NULL_INPUT_VALUE);
@@ -86,7 +94,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                 throw new CustomException(ErrorCode.ADMIN_ACCESS_DENIED); // 401 or 403
             }
 
-            if (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.DORMANT){
+            if (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.DORMANT && user.getStatus() != UserStatus.ADMIN_DORMANT){
                 throw new CustomException(ErrorCode.USER_STATUS_BLOCKED);
             }
 
@@ -98,12 +106,19 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
             }
 
             String clientIp = getClientIp(request);
+            RestrictIp restrictIp = restrictIpRepository.findTopByIpAddressOrderByCreatedAtDesc(clientIp).stream()
+                    .findFirst()
+                    .orElse(null);
+
+            if(restrictIp != null && restrictIp.getUnlockTime().isAfter(LocalDateTime.now())){
+                throw new CustomException(ErrorCode.LOGIN_RESTRICT);
+            }
 
             List<AllowedAdminIp> allowedAdminIpList = allowedAdminIpsRepository.findByAdminId(user.getId());
 
             if (!allowedAdminIpList.isEmpty()){
                 boolean isAllowed = allowedAdminIpList.stream()
-                        .anyMatch(allowed -> allowed.getIpAddress().contains(clientIp));
+                        .anyMatch(allowed -> allowed.getIpAddress().equals(clientIp));
                 if (isAllowed != true){
                     throw new CustomException(ErrorCode.ACCESS_DENIED_BY_IP);
                 }
@@ -117,14 +132,14 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
             return authenticationManager.authenticate(authToken);
 
         }  catch (CustomException e) {
-            // 🔥 실패 로그 수동 기록
-            saveLoginFailure(request, e.getMessage(), getLoginIdFromRequest(request));
-            throw new BadCredentialsException(e.getMessage()); // Spring Security에 알리기 위한 예외 변환
+            saveLoginFailure(request, e.getMessage(), loginRequest != null ? loginRequest.getLoginId() : "(unknown)");
+            throw new BadCredentialsException(e.getMessage());
         } catch (IOException e) {
             log.error("로그인 요청 처리 실패", e);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+    @Transactional
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
@@ -151,7 +166,6 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                 new Date(System.currentTimeMillis() + jwtTokenProvider.getRefreshExpiration())
         );
 
-        // 🔄 리프레시 토큰 저장
         RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(userDetails.getId())
                         .map(token -> {
                             token.updateToken(refreshToken, LocalDateTime.now().plus(Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())));
@@ -163,6 +177,8 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                         .build());
 
         refreshTokenRepository.save(refreshTokenEntity);
+
+        String clientIp = getClientIp(request);
 
         // 🛡️ 인증 정보 SecurityContext 에 등록
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -178,7 +194,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
         loginHistoryRepository.save(LoginHistory.builder()
                 .loginId(user.getLoginId())
                 .userId(user.getId())
-                .ipAddress(request.getRemoteAddr())
+                .ipAddress(clientIp)
                 .userAgent(request.getHeader("User-Agent"))
                 .success(true)
                 .failReason(null)
@@ -186,7 +202,10 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                 .createdAt(LocalDateTime.now())
                 .build());
 
+        restrictIpRepository.deleteAllByIpAddress(clientIp);
+
     }
+    @Transactional
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
@@ -195,21 +214,31 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         log.warn("로그인 실패: {}", failed.getMessage(), failed);
 
-        String loginId = request.getParameter("loginId");
-        if (loginId == null){
-            loginId = "(unknown)";
-        }
+        String clientIp = getClientIp(request);
 
         loginHistoryRepository.save(LoginHistory.builder()
-                .loginId(loginId)
+                .loginId("(unknown)")
                 .userId(null)
-                .ipAddress(request.getRemoteAddr())
+                .ipAddress(clientIp)
                 .userAgent(request.getHeader("User-Agent"))
                 .success(false)
                 .site("ERP")
                 .failReason(failed.getMessage()) // ex: Bad credentials, User not found
                 .createdAt(LocalDateTime.now())
                 .build());
+
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+        List<LoginHistory> histories = loginHistoryRepository.findRecentByIpAddress(clientIp, fiveMinutesAgo);
+
+        if(histories.size() >= 5){
+            RestrictIp ip = RestrictIp.builder()
+                    .restrictReason(RestrictReason.PW_ATT)
+                    .ipAddress(clientIp)
+                    .unlockTime(LocalDateTime.now().plusMinutes(60))
+                    .build();
+
+            restrictIpRepository.save(ip);
+        }
     }
 
     private String getClientIp(HttpServletRequest request) {

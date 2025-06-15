@@ -44,14 +44,7 @@ public class PortfolioService {
     public PfResponse registerPf(CustomUserDetails customUserDetails, PfRegisterRequest request){
         globalService.validateAdmin(customUserDetails);
 
-        if(request.getOrderId() != null){
-            if(portfolioRepository.findByOrderId(request.getOrderId()).isPresent() ) {
-                throw new CustomException(ErrorCode.DUPLICATE_PORTFOLIO);
-            }
-        }
-
         Portfolio portfolio = Portfolio.builder()
-                .orderId(request.getOrderId())
                 .companyName(request.getCompanyName())
                 .location(request.getLocation())
                 .concept(request.getConcept())
@@ -127,7 +120,7 @@ public class PortfolioService {
         portfolioItemRepository.deleteItemsByPortfolioId(portfolioId);
         portfolioImageRepository.deleteImagesByPortfolioId(portfolioId);
 
-        portfolio.update(request.getCompanyName(), request.getLocation(), request.getConcept(), request.getDescription(), request.getRegisterDate().getStartDate(), request.getRegisterDate().getEndDate(), customUserDetails.getId(), request.getOrderId());
+        portfolio.update(request.getCompanyName(), request.getLocation(), request.getConcept(), request.getDescription(), request.getRegisterDate().getStartDate(), request.getRegisterDate().getEndDate(), customUserDetails.getId());
 
         List<PortfolioItem> portfolioItems = request.getItemList().stream()
                 .map(r -> {
@@ -186,10 +179,6 @@ public class PortfolioService {
                         .orderIndex(img.getOrderIndex())
                         .detailComment(img.getDetailComment())
                         .build()
-                )
-                .sorted(Comparator.comparing(
-                        PfImageResponse::getOrderIndex,
-                        Comparator.nullsLast(Integer::compareTo))
                 ).collect(Collectors.toList());
 
         List<PortfolioItem> itemList = portfolioItemRepository.findAllByPortfolio(portfolio);
@@ -232,7 +221,6 @@ public class PortfolioService {
 
         return PfResponse.builder()
                 .portfolioId(portfolio.getId())
-                .orderId(portfolio.getOrderId())
                 .companyName(portfolio.getCompanyName())
                 .location(portfolio.getLocation())
                 .concept(portfolio.getConcept())
@@ -276,8 +264,7 @@ public class PortfolioService {
         QPortfolio portfolio = QPortfolio.portfolio;
         QPortfolioImage portfolioImage = QPortfolioImage.portfolioImage;
         BooleanBuilder builder = new BooleanBuilder()
-                .and(portfolio.status.ne(PortfolioStatus.DELETED))
-                .and(portfolioImage.imageType.eq(ImageType.THUMBNAIL));
+                .and(portfolio.status.ne(PortfolioStatus.DELETED));
 
         if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
             switch (request.getKey()) {
@@ -307,6 +294,7 @@ public class PortfolioService {
                 .select(portfolio.id)
                 .from(portfolio)
                 .leftJoin(portfolio.portfolioImages, portfolioImage)
+                .on(portfolioImage.imageType.eq(ImageType.THUMBNAIL))
                 .where(builder)
                 .orderBy(portfolioImage.createdAt.desc()) // 정렬 필수!
                 .offset(pageable.getOffset())
@@ -337,6 +325,7 @@ public class PortfolioService {
                 )
                 .from(portfolio)
                 .leftJoin(portfolio.portfolioImages, portfolioImage)
+                .on(portfolioImage.imageType.eq(ImageType.THUMBNAIL))
                 .where(builder, portfolio.id.in(portfolioId))
                 .fetch();
 
@@ -381,8 +370,7 @@ public class PortfolioService {
         QPortfolioImage portfolioImage = QPortfolioImage.portfolioImage;
         QPortfolioDisplay portfolioDisplay = QPortfolioDisplay.portfolioDisplay;
         BooleanBuilder builder = new BooleanBuilder()
-                .and(portfolio.status.ne(PortfolioStatus.DELETED))
-                .and(portfolioImage.imageType.eq(ImageType.THUMBNAIL));
+                .and(portfolio.status.ne(PortfolioStatus.DELETED));
 
         if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
             switch (request.getKey()) {
@@ -412,8 +400,9 @@ public class PortfolioService {
                 .select(portfolio.id)
                 .from(portfolio)
                 .leftJoin(portfolio.portfolioImages, portfolioImage)
+                .on(portfolioImage.imageType.eq(ImageType.THUMBNAIL))
                 .where(builder)
-                .orderBy(portfolioImage.createdAt.desc()) // 정렬 필수!
+                .orderBy(portfolioImage.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -438,6 +427,7 @@ public class PortfolioService {
                 )
                 .from(portfolio)
                 .leftJoin(portfolio.portfolioImages, portfolioImage)
+                .on(portfolioImage.imageType.eq(ImageType.THUMBNAIL))
                 .leftJoin(portfolio.portfolioDisplays, portfolioDisplay)
                 .where(builder)
                 .orderBy(
@@ -446,22 +436,16 @@ public class PortfolioService {
                         portfolio.createdAt.desc())
                 .fetch();
 
-        Map<Long, Tuple> tupleMap = rows.stream()
-                .collect(Collectors.toMap(t -> t.get(portfolio.id), Function.identity()));
-
-        List<PfDisplayResponse> responses = portfolioId.stream()
-                .map(id -> {
-                    Tuple r = tupleMap.get(id);
-                    return PfDisplayResponse.builder()
-                            .portfolioId(r.get(portfolio.id))
-                            .thumbNailImgUrl(Optional.ofNullable(r.get(portfolioImage.imageUrl)).orElse(""))
-                            .companyName(r.get(portfolio.companyName))
-                            .orderIndex(r.get(portfolioDisplay.orderIndex))
-                            .isPinned(r.get(portfolio.isPinned))
-                            .createdAt(r.get(portfolio.createdAt).toLocalDate())
-                            .build();
-                }).collect(Collectors.toList());
-
+        List<PfDisplayResponse> responses = rows.stream()
+                .map(r -> PfDisplayResponse.builder()
+                        .portfolioId(r.get(portfolio.id))
+                        .thumbNailImgUrl(Optional.ofNullable(r.get(portfolioImage.imageUrl)).orElse(""))
+                        .companyName(r.get(portfolio.companyName))
+                        .orderIndex(r.get(portfolioDisplay.orderIndex))
+                        .isPinned(r.get(portfolio.isPinned))
+                        .createdAt(r.get(portfolio.createdAt).toLocalDate())
+                        .build())
+                .collect(Collectors.toList());
 
         Long totalCount = jpaQueryFactory
                 .select(portfolio.count())
@@ -479,48 +463,53 @@ public class PortfolioService {
     }
 
     @Transactional
-    public List<PfDisplayUpdateResponse> updateDisplayPf(CustomUserDetails customUserDetails, List<DisplayUpdateRequest> request){
+    public List<PfDisplayUpdateResponse> updateDisplayPf(CustomUserDetails customUserDetails, List<DisplayUpdateRequest> request) {
         globalService.validateAdmin(customUserDetails);
 
-        Set<Integer> indexList = request.stream().map(DisplayUpdateRequest::getOrderIndex).collect(Collectors.toSet());
+        Set<Integer> indexList = request.stream()
+                .map(DisplayUpdateRequest::getOrderIndex)
+                .collect(Collectors.toSet());
 
-        List<Long> idList = request.stream().map(DisplayUpdateRequest::getPortfolioId).toList();
+        List<Long> idList = request.stream()
+                .map(DisplayUpdateRequest::getPortfolioId)
+                .toList();
 
         Map<Long, Portfolio> pfMap = portfolioRepository.findAllByIdInAndIsPinnedFalse(idList).stream()
                 .collect(Collectors.toMap(Portfolio::getId, Function.identity()));
 
-        if(indexList.size() != request.size()){
+        if (indexList.size() != request.size()) {
             throw new CustomException(ErrorCode.DUPLICATE_ORDER_VALUE);
         }
 
-        if(pfMap.size() != request.size()){
+        if (pfMap.size() != request.size()) {
             throw new CustomException(ErrorCode.PINNED_CANNOT_HAVE_MANUAL_ORDER);
         }
 
-        portfolioDisplayRepository.deleteAll();
+        portfolioDisplayRepository.deleteAllInBatch();
 
-        List<PortfolioDisplay> displays = request.stream()
-                .map(u -> {
-                    Portfolio portfolio = pfMap.get(u.getPortfolioId());
-                    PortfolioDisplay display = PortfolioDisplay.builder()
-                            .orderIndex(u.getOrderIndex())
-                            .updatedBy(customUserDetails.getId())
-                            .portfolio(portfolio)
-                            .build();
-                    portfolio.setPortfolioDisplays(display);
-                    return display;
-                }).collect(Collectors.toList());
+        List<PortfolioDisplay> toSave = request.stream()
+                .sorted(Comparator.comparing(DisplayUpdateRequest::getOrderIndex))
+                .map(u -> PortfolioDisplay.builder()
+                        .orderIndex(u.getOrderIndex())
+                        .updatedBy(customUserDetails.getId())
+                        .portfolio(pfMap.get(u.getPortfolioId()))
+                        .build())
+                .toList();
 
-        return  displays.stream()
+        List<PortfolioDisplay> displays = portfolioDisplayRepository.saveAll(toSave);
+
+        return displays.stream()
+                .sorted(Comparator.comparing(PortfolioDisplay::getOrderIndex))
                 .map(d -> PfDisplayUpdateResponse.builder()
                         .portfolioId(d.getPortfolio().getId())
                         .companyName(d.getPortfolio().getCompanyName())
                         .orderIndex(d.getOrderIndex())
                         .isPinned(d.getPortfolio().getIsPinned())
                         .createdAt(d.getCreatedAt().toLocalDate())
-                        .build()
-                ).collect(Collectors.toList());
+                        .build())
+                .toList();
     }
+
 
     @Transactional
     public PfDisplayUpdateResponse togglePinned(CustomUserDetails customUserDetails, Long portfolioId){
@@ -532,10 +521,16 @@ public class PortfolioService {
         portfolio.updateIsPinned(updatePin, customUserDetails.getId());
         Portfolio saved = portfolioRepository.save(portfolio);
 
+        Integer order = saved.getPortfolioDisplays().stream()
+                .findFirst()
+                .map(PortfolioDisplay::getOrderIndex)
+                .orElse(null);
+
+
         return PfDisplayUpdateResponse.builder()
                 .portfolioId(saved.getId())
                 .companyName(saved.getCompanyName())
-                .orderIndex(portfolio.getPortfolioDisplays().getOrderIndex())
+                .orderIndex(order)
                 .isPinned(portfolio.getIsPinned())
                 .createdAt(portfolio.getCreatedAt().toLocalDate())
                 .build();

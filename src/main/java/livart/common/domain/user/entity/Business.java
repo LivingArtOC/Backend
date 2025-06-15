@@ -25,9 +25,6 @@ public class Business extends User {
     @Column(nullable = false)
     private String bizName;
 
-    @Column(nullable = false)
-    private String bizPhoneNum;
-
     @Column(nullable = false, unique = true)
     private String bizRegistrationNum;
 
@@ -52,7 +49,7 @@ public class Business extends User {
     @LastModifiedDate
     private LocalDateTime bizUpdatedAt;
 
-    public static Business businessFromUser(User user, String ownerName, String bizName, String bizPhoneNum, String bizRegistrationNum,
+    public static Business businessFromUser(User user, String ownerName, String bizName, String bizRegistrationNum,
                                             String bizStatus, String bizType, String faxNum, String managerName, String managerPhoneNum) {
         return Business.builder()
                 .id(user.getId())
@@ -67,7 +64,6 @@ public class Business extends User {
                 .deletedAt(user.getDeletedAt())
                 .ownerName(ownerName)
                 .bizName(bizName)
-                .bizPhoneNum(bizPhoneNum)
                 .bizRegistrationNum(bizRegistrationNum)
                 .bizStatus(bizStatus)
                 .bizType(bizType)

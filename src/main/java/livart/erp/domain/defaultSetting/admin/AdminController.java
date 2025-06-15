@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.dto.enums.ActionType;
 import livart.common.dto.request.ValidateLoginIdRequest;
@@ -30,7 +31,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "기본 설정 - 관리 정책 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "기본 설정 - 관리 정책 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/setting/admin")
 public class AdminController {
 
@@ -40,8 +41,9 @@ public class AdminController {
     @PostMapping("/register")
     @Operation(summary = "✅ 운영자 등록 API, 토큰 O")
     public ResponseEntity<ApiResponse<AdminResponse>> createAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                  @RequestBody AdminRequest request){
-        AdminResponse response = adminService.createAdmin(customUserDetails, request);
+                                                                  @RequestBody AdminRequest request,
+                                                                  HttpSession session){
+        AdminResponse response = adminService.createAdmin(customUserDetails, request, session);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 
@@ -58,7 +60,8 @@ public class AdminController {
                 httpServletRequest.getRequestURI(),
                 "admin",
                 adminId,
-                httpServletRequest.getRemoteAddr()
+                httpServletRequest.getRemoteAddr(),
+                "운영자 세부 정보 조회"
         );
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -68,8 +71,9 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminResponse>> updateAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                   @RequestBody AdminRequest request,
                                                                   @PathVariable Long adminId,
-                                                                  HttpServletRequest httpServletRequest){
-        AdminResponse response = adminService.updateAdmin(customUserDetails, request, adminId);
+                                                                  HttpServletRequest httpServletRequest,
+                                                                  HttpSession session){
+        AdminResponse response = adminService.updateAdmin(customUserDetails, request, adminId, session);
 
         globalService.log(
                 customUserDetails.getId(),
@@ -78,7 +82,8 @@ public class AdminController {
                 httpServletRequest.getRequestURI(),
                 "admin",
                 adminId,
-                httpServletRequest.getRemoteAddr()
+                httpServletRequest.getRemoteAddr(),
+                "운영자 세부 정보 수정"
         );
 
         return ResponseEntity.ok(ApiResponse.ok(response));

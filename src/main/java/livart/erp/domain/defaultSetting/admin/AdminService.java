@@ -2,6 +2,7 @@ package livart.erp.domain.defaultSetting.admin;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.servlet.http.HttpSession;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.setting.entity.AllowedAdminIp;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
@@ -17,8 +18,10 @@ import livart.common.dto.enums.user.UserStatus;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.log.entity.AdminActionLog;
+import livart.common.log.entity.OtpLog;
 import livart.common.log.repository.AdminActionLogRepository;
 import livart.common.log.repository.LoginHistoryRepository;
+import livart.common.log.repository.OtpLogRepository;
 import livart.common.service.GlobalService;
 import livart.common.mapper.SearchResult;
 import livart.erp.domain.defaultSetting.admin.dto.request.AdminLogSearchRequest;
@@ -36,7 +39,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -55,9 +60,10 @@ public class AdminService {
     private final AdminActionLogRepository adminActionLogRepository;
     private final LoginHistoryRepository loginHistoryRepository;
     private final JPAQueryFactory jpaQueryFactory;
+    private final OtpLogRepository otpLogRepository;
 
     @Transactional
-    public AdminResponse createAdmin(CustomUserDetails customUserDetails,AdminRequest request){
+    public AdminResponse createAdmin(CustomUserDetails customUserDetails, AdminRequest request, HttpSession session){
 
         if(request.getIpList() == null){
             throw new CustomException(ErrorCode.NULL_INPUT_IP_LIST);
@@ -72,13 +78,21 @@ public class AdminService {
 
         String encodedPassword = bCryptPasswordEncoder.encode(request.getPassword());
 
+        Optional<OtpLog> verifiedOtp = otpLogRepository.findTopByPhoneNumAndStatusOrderBySentAtDesc(request.getPhoneNum(), OtpStatus.VERIFIED);
+
+        if (verifiedOtp.isEmpty() || verifiedOtp.get().getSentAt().isBefore(LocalDateTime.now().minus(30, ChronoUnit.MINUTES))) {
+            throw new CustomException(ErrorCode.PHONE_AUTHORIZED);
+        }
+
         Admin admin = adminRegisterMapper.toEntity(request).toBuilder()
                 .password(encodedPassword)
                 .role(Role.ADMIN)
                 .provider(Provider.LOCAL)
                 .status(UserStatus.ACTIVE)
                 .adminRegister(true)
+                .phoneNum(request.getPhoneNum())
                 .mileage(0)
+                .userName(request.getAdminName())
                 .updatedBy(customUserDetails.getId())
                 .build();
 
@@ -96,6 +110,7 @@ public class AdminService {
         }
 
         Admin saved = adminRepository.save(saved1);
+        session.removeAttribute("PHONE_VERIFIED_" + request.getPhoneNum());
 
         List<String> ipList = saved.getAllowedAdminIps().stream()
                 .map(AllowedAdminIp::getIpAddress)
@@ -138,7 +153,7 @@ public class AdminService {
     }
 
     @Transactional
-    public AdminResponse updateAdmin(CustomUserDetails customUserDetails, AdminRequest request, Long adminId){
+    public AdminResponse updateAdmin(CustomUserDetails customUserDetails, AdminRequest request, Long adminId, HttpSession session){
 
         if(request.getIpList() == null){
             throw new CustomException(ErrorCode.NULL_INPUT_IP_LIST);
@@ -148,28 +163,42 @@ public class AdminService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_USER);
         }
 
-        validateLoginId(customUserDetails, request.getLoginId());
         validatePassword(request.getPassword());
 
         String encodedPassword = bCryptPasswordEncoder.encode(request.getPassword());
 
-        Admin admin = adminRepository.findById(adminId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        adminRegisterMapper.updateEntityFromRequest(request, admin);
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if(admin.getPhoneNum() != request.getPhoneNum()){
+            Optional<OtpLog> verifiedOtp = otpLogRepository.findTopByPhoneNumAndStatusOrderBySentAtDesc(request.getPhoneNum(), OtpStatus.VERIFIED);
+
+            if (verifiedOtp.isEmpty() || verifiedOtp.get().getSentAt().isBefore(LocalDateTime.now().minus(30, ChronoUnit.MINUTES))) {
+                throw new CustomException(ErrorCode.PHONE_AUTHORIZED);
+            }
+        }
+
+        updateLoginId(customUserDetails, request.getLoginId(), admin);
+        admin.updateFrom(request, encodedPassword);
         admin.update(encodedPassword);
 
         admin.getAllowedAdminIps().clear();
-        Admin saved = adminRepository.save(admin);
 
         if(request.getLimitIpAccess()){
             List<AllowedAdminIp> allowedAdminIpList = request.getIpList()
                     .stream()
                     .map(ip -> AllowedAdminIp.builder()
-                            .admin(saved)
+                            .admin(admin)
                             .ipAddress(ip)
                             .build())
                     .collect(Collectors.toList());
+
+            admin.getAllowedAdminIps().addAll(allowedAdminIpList);
             allowedAdminIpsRepository.saveAll(allowedAdminIpList);
         }
+
+        Admin saved = adminRepository.save(admin);
+        session.removeAttribute("PHONE_VERIFIED_" + request.getPhoneNum());
 
         AdminResponse response = adminRegisterMapper.toDto(saved)
                 .toBuilder()
@@ -252,7 +281,7 @@ public class AdminService {
 
         List<DelAdminResponse> responseList = userRepository.findAllById(adminIds).stream()
                 .map(users -> {
-                    users.updateStatus(UserStatus.DELETED);
+                    users.updateStatus(UserStatus.ADMIN_DELETED);
                     User saved = userRepository.save(users);
                     return DelAdminResponse.builder()
                             .adminId(saved.getId())
@@ -379,6 +408,22 @@ public class AdminService {
         // 2. DB 중복 확인
         if (userRepository.existsByLoginId(loginId)) {
             throw new CustomException(ErrorCode.DUPLICATED_LOGIN_ID);
+        }
+    }
+
+    public void updateLoginId(CustomUserDetails customUserDetails, String loginId, Admin admin) {
+        globalService.validateAdmin(customUserDetails);
+
+        // 1. 정규식: 영소문자 + 숫자 조합, 6~12자
+        String regex = "^[a-z0-9]{6,12}$";
+        if (!Pattern.matches(regex, loginId)) {
+            throw new CustomException(ErrorCode.INVALID_LOGIN_ID_FORMAT);
+        }
+        // 2. DB 중복 확인
+        if (userRepository.existsByLoginId(loginId)) {
+            if(!admin.getLoginId().equals(loginId)){
+                throw new CustomException(ErrorCode.DUPLICATED_LOGIN_ID);
+            }
         }
     }
 }

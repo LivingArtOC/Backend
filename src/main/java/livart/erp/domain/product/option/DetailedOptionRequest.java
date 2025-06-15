@@ -11,6 +11,4 @@ public class DetailedOptionRequest {
     private Integer orderIndex;
     private String optionName;
     private String valueName; // 옵션 값
-    private String imageUrl; // 옵션 이미지
-    private String fileName; // 이미지 파일 명
 }

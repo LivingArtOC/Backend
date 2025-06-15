@@ -11,6 +11,7 @@ import livart.common.domain.term.repository.DetailTermRepository;
 import livart.common.domain.term.repository.TermRepository;
 import livart.common.dto.enums.defaultSetting.DayType;
 import livart.common.dto.enums.defaultSetting.OperatingHoursType;
+import livart.common.dto.enums.term.TermSuperType;
 import livart.common.dto.enums.term.TermType;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
@@ -163,12 +164,17 @@ public class PolicyService {
                 .termId(term.getId())
                 .isRequired(term.getIsRequired())
                 .title(term.getTitle())
+                .superType(term.getSuperType())
                 .type(term.getType())
-                .content(term.getContent())
-                .course(detailTerm.getCourse())
+                .usePolicyContent(term.getContent())
+                .courseContent(detailTerm.getCourse())
                 .startDate(detailTerm.getStartDate())
                 .endDate(detailTerm.getEndDate())
                 .isExposed(detailTerm.getIsExposed())
+                .officerEmail(detailTerm.getOfficerEmail())
+                .officerPosition(detailTerm.getOfficerPosition())
+                .officerName(detailTerm.getOfficerName())
+                .officerPhone(detailTerm.getOfficerPhone())
                 .build();
     }
 
@@ -178,30 +184,36 @@ public class PolicyService {
 
         Term term = termRepository.findByType(TermType.USE_POLICY)
                 .map(t -> {
-                    t.update(request.getContent(), customUserDetails.getId());
+                    t.update(request.getUsePolicyContent(), customUserDetails.getId());
                     return t;
                 })
                 .orElseGet(() -> Term.builder()
-                        .isRequired(request.getIsRequired())
+                        .superType(TermSuperType.CORPORATION)
+                        .isRequired(true)
                         .title("이용 약관")
                         .type(TermType.USE_POLICY)
                         .updatedBy(customUserDetails.getId())
-                        .content(request.getContent())
+                        .content(request.getUsePolicyContent())
                         .build());
 
         Term saved1 = termRepository.save(term);
 
         DetailTerm detailTerm = detailTermRepository.findByTerm(saved1)
                 .map(d -> {
-                    d.updateFromUsePolicy(request.getCourse(), request.getStartDate(), request.getEndDate(), request.getIsExposed(), customUserDetails.getId());
+                    d.updateFromUsePolicy(request.getCourseContent(), request.getStartDate(), request.getEndDate(), request.getIsExposed(),
+                            request.getOfficerName(), request.getOfficerPosition(), request.getOfficerPhone(), request.getOfficerEmail(), customUserDetails.getId());
                     return d;
                 })
                 .orElseGet(() -> DetailTerm.builder()
-                        .course(request.getCourse())
+                        .course(request.getCourseContent())
                         .startDate(request.getStartDate())
                         .endDate(request.getEndDate())
                         .isExposed(request.getIsExposed())
                         .updatedBy(customUserDetails.getId())
+                        .officerEmail(request.getOfficerEmail())
+                        .officerPhone(request.getOfficerPhone())
+                        .officerPosition(request.getOfficerPosition())
+                        .officerName(request.getOfficerName())
                         .term(saved1)
                         .build());
 
@@ -213,79 +225,16 @@ public class PolicyService {
                 .termId(saved.getId())
                 .isRequired(saved.getIsRequired())
                 .title(saved.getTitle())
+                .superType(saved.getSuperType())
                 .type(saved.getType())
-                .content(saved.getContent())
-                .course(detailTerm.getCourse())
+                .usePolicyContent(saved.getContent())
+                .courseContent(detailTerm.getCourse())
                 .startDate(detailTerm.getStartDate())
                 .endDate(detailTerm.getEndDate())
                 .isExposed(detailTerm.getIsExposed())
-                .build();
-    }
-
-    public CourseResponse getCourse(CustomUserDetails customUserDetails){
-        globalService.validateAdmin(customUserDetails);
-
-        Term term = termRepository.findByType(TermType.COURSE).orElseThrow(() -> new CustomException(ErrorCode.TERM_NOT_FOUND));
-        DetailTerm detailTerm = detailTermRepository.findByTerm(term).orElseThrow(() -> new CustomException(ErrorCode.DETAIL_TERM_NOT_FOUND));
-
-        return CourseResponse.builder()
-                .termId(term.getId())
-                .isRequired(term.getIsRequired())
-                .title(term.getTitle())
-                .type(term.getType())
-                .content(term.getContent())
-                .officerName(detailTerm.getOfficerName())
-                .officerPosition(detailTerm.getOfficerPosition())
                 .officerEmail(detailTerm.getOfficerEmail())
-                .officerPhone(detailTerm.getOfficerPhone())
-                .build();
-    }
-
-    @Transactional
-    public CourseResponse updateCourse(CustomUserDetails customUserDetails, CourseRequest request){
-        globalService.validateAdmin(customUserDetails);
-
-        Term term = termRepository.findByType(TermType.COURSE)
-                .map(t -> {
-                    t.update(request.getContent(), customUserDetails.getId());
-                    return t;
-                })
-                .orElseGet(() -> Term.builder()
-                        .isRequired(request.getIsRequired())
-                        .title("개인정보 처리방침")
-                        .type(TermType.COURSE)
-                        .updatedBy(customUserDetails.getId())
-                        .content(request.getContent())
-                        .build());
-
-        Term saved1 = termRepository.save(term);
-
-        DetailTerm detailTerm = detailTermRepository.findByTerm(saved1)
-                .map(d -> {
-                    d.updateFromCourse(request.getOfficerName(), request.getOfficerPosition(), request.getOfficerPhone(), request.getOfficerEmail(), customUserDetails.getId());
-                    return d;
-                })
-                .orElseGet(() -> DetailTerm.builder()
-                        .officerName(request.getOfficerName())
-                        .officerPosition(request.getOfficerPosition())
-                        .officerPhone(request.getOfficerPhone())
-                        .officerEmail(request.getOfficerEmail())
-                        .updatedBy(customUserDetails.getId())
-                        .term(saved1)
-                        .build());
-
-        saved1.setDetailTerm(detailTerm);
-        Term saved = termRepository.save(saved1);
-
-        return CourseResponse.builder()
-                .termId(saved.getId())
-                .isRequired(saved.getIsRequired())
-                .title(saved.getTitle())
-                .type(saved.getType())
-                .content(saved.getContent())
-                .officerName(detailTerm.getOfficerName())
                 .officerPosition(detailTerm.getOfficerPosition())
-                .officerEmail(detailTerm.getOfficerEmail())
+                .officerName(detailTerm.getOfficerName())
                 .officerPhone(detailTerm.getOfficerPhone())
                 .build();
     }
@@ -293,10 +242,11 @@ public class PolicyService {
     public List<TermsResponse> getTerm(CustomUserDetails customUserDetails){
         globalService.validateAdmin(customUserDetails);
 
-        return termRepository.findAllByTypeNotIn(List.of(TermType.USE_POLICY, TermType.COURSE))
+        return termRepository.findAllByTypeNotIn(List.of(TermType.USE_POLICY))
                 .stream()
                 .map(t -> TermsResponse.builder()
                         .termId(t.getId())
+                        .superType(t.getSuperType())
                         .type(t.getType())
                         .required(t.getIsRequired())
                         .title(t.getTitle())
@@ -309,21 +259,20 @@ public class PolicyService {
     public TermsResponse updateTerm(CustomUserDetails customUserDetails, TermsRequest request){
         globalService.validateAdmin(customUserDetails);
 
-        if(!TermType.contains(request.getType())){
+        if(request.getType() == null){
             throw new CustomException(ErrorCode.INVALID_TYPE);
         }
 
-        TermType type = TermType.valueOf(request.getType().toUpperCase());
-
-        Term term = termRepository.findByTypeAndIsRequired(type, request.getIsRequired())
+        Term term = termRepository.findByTypeAndIsRequired(request.getType(), request.getIsRequired())
                 .map(t -> {
                     t.updateOthers(request.getTitle(), request.getContent(), customUserDetails.getId());
                     return t;
                 })
                 .orElseGet(() -> Term.builder()
+                        .superType(request.getSuperType())
                         .isRequired(request.getIsRequired())
                         .title(request.getTitle())
-                        .type(type)
+                        .type(request.getType())
                         .updatedBy(customUserDetails.getId())
                         .content(request.getContent())
                         .build());
@@ -332,6 +281,7 @@ public class PolicyService {
 
         return TermsResponse.builder()
                 .termId(saved.getId())
+                .superType(saved.getSuperType())
                 .type(saved.getType())
                 .required(saved.getIsRequired())
                 .title(saved.getTitle())

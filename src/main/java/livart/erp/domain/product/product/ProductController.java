@@ -11,6 +11,8 @@ import livart.common.dto.response.ApiResponse;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
+import livart.erp.domain.product.excel.ExcelDownloadRequest;
+import livart.erp.domain.product.excel.ExcelFieldResponse;
 import livart.erp.domain.product.excel.ExcelService;
 import livart.erp.domain.product.product.dto.request.*;
 import livart.erp.domain.product.product.dto.response.*;
@@ -34,13 +36,13 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@Tag(name = "제품 관련 설정 관련 API", description = "✅ 개발 완료")
+@Tag(name = "제품 관련 설정 관련 API", description = "✅✅ 개발 완료")
 @RequestMapping("api/erp/product")
 public class ProductController {
 
     private final ProductService productService;
     private final ExcelService excelService;
-    private final ProductRepository productRepository;
+
 
     @PostMapping("")
     @Operation(summary = "✅ 제품 신규 등록 API, 토큰 O")
@@ -112,17 +114,18 @@ public class ProductController {
 
 
     @PostMapping("/manage")
-    @Operation(summary = "✅ 상품 가격 관리 & 품절 관리 페이지 검색 API, 토큰 O")
-    public ResponseEntity<ApiResponse<SearchResult<ProductSearchResponse>>> getProductManageList(
+    @Operation(summary = "✅ 상품 품절 관리 페이지 검색 API, 토큰 O")
+    public ResponseEntity<ApiResponse<SearchResult<ProductSummaryResponse>>> getProductStockList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody ProductBatchRequest request,
             @PageableDefault(size = 10, sort = "createdAt", direction = DESC)
             @Parameter(hidden = true) Pageable pageable){
 
-        SearchResult<ProductSearchResponse> response = productService.getProductManageList(customUserDetails, request, pageable);
+        SearchResult<ProductSummaryResponse> response = productService.getProductStockList(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    /*
     @PutMapping("/change-price")
     @Operation(summary = "✅ 상품들 가격 일괄 적용 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<ProductDeactiveResponse>>> updatePrice(@AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -130,6 +133,7 @@ public class ProductController {
         List<ProductDeactiveResponse> response = productService.updatePrice(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+    */
 
     @PostMapping("/display/{categoryId}")
     @Operation(summary = "✅ 상품들 카테고리별 진열 조회 API, 토큰 O")
@@ -181,19 +185,21 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/excel/download")
+    @Operation(summary = "✅ 상품 목록 엑셀 다운을 위한 조회 API, 일단은 연동 X")
+    public ResponseEntity<ApiResponse<List<ExcelFieldResponse>>> getFieldList(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        List<ExcelFieldResponse> response = excelService.getFieldList(customUserDetails);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
 
     @PostMapping("/excel/download")
     @Operation(summary = "상품 목록 엑셀 다운 API, 토큰 O")
     public ResponseEntity<ApiResponse<String>> excelDownload(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                             @RequestBody IdListRequest request,
+                                                             @RequestBody ExcelDownloadRequest request,
                                                              HttpServletResponse response) throws IOException {
-        List<Product> products = productRepository.findAllById(request.getProductIdList());
 
-        if (products.isEmpty()) {
-            throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
 
-        Workbook workbook = excelService.generateProductExcel(products);
+        Workbook workbook = excelService.generateProductExcel(customUserDetails, request);
 
         String filename = "products_" + LocalDate.now() + ".xlsx";
         String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replaceAll("\\+", "%20");

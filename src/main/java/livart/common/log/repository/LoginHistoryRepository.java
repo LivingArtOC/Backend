@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
     @Query("""
@@ -24,5 +25,13 @@ public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long
             @Param("end") LocalDateTime end,
             Pageable pageable
     );
+
+    @Query("""
+    SELECT l FROM LoginHistory l 
+    WHERE l.ipAddress = :clientIp 
+        AND l.createdAt >= :thresholdTime
+        AND l.success = false 
+    """)
+    List<LoginHistory> findRecentByIpAddress(@Param("clientIp") String clientIp, @Param("thresholdTime") LocalDateTime thresholdTime);
 
 }

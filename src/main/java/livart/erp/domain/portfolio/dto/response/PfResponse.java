@@ -13,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class PfResponse {
     private Long portfolioId;
-    private Long orderId; // null 이면 거래 정보 없이 등록
     private String companyName;
     private String location;
     private String concept;

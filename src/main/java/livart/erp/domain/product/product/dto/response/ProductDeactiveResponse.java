@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductDeactiveResponse {
-    private Long productId;
-    private String productName;
-    private String productCode;
+    private Long optionId;
+    private String optionName;
+    private String optionCode;
     private ProductStatus status;
 }

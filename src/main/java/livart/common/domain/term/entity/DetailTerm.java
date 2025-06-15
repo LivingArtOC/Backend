@@ -29,19 +29,16 @@ public class DetailTerm extends BaseTime {
     @JoinColumn(name = "term_id", nullable = false)
     private Term term;
 
-    public void updateFromUsePolicy(String course, LocalDate startDate, LocalDate endDate, Boolean isExposed,Long updatedBy){
+    public void updateFromUsePolicy(String course, LocalDate startDate, LocalDate endDate, Boolean isExposed,
+                                    String officerName,
+                                    String officerPosition,
+                                    String officerPhone,
+                                    String officerEmail,
+                                    Long updatedBy){
         this.course = course;
         this.startDate = startDate;
         this.endDate = endDate;
         this.isExposed = isExposed;
-        this.updatedBy = updatedBy;
-    }
-
-    public void updateFromCourse(String officerName,
-                                 String officerPosition,
-                                 String officerPhone,
-                                 String officerEmail,
-                                 Long updatedBy){
         this.officerName = officerName;
         this.officerEmail = officerEmail;
         this.officerPhone = officerPhone;
