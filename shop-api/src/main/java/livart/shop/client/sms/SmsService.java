@@ -1,0 +1,73 @@
+package livart.shop.client.sms;
+
+import jakarta.servlet.http.HttpSession;
+import livart.common.client.sms.SmsSender;
+import livart.common.dto.enums.OtpStatus;
+import livart.common.exception.CustomException;
+import livart.common.exception.ErrorCode;
+import livart.common.log.entity.OtpLog;
+import livart.common.log.repository.OtpLogRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class SmsService {
+    private final OtpLogRepository otpLogRepository;
+    private final SmsSender smsSender;
+
+    public void sendOtp(OtpSendRequest request) {
+        String code = generateCode();
+
+        try {
+            smsSender.sendSMS(request.getPhoneNum(), "[Livart] 인증번호는 [" + code + "] 입니다.");
+
+            otpLogRepository.save(OtpLog.builder()
+                    .phoneNum(request.getPhoneNum())
+                    .otpCode(code)
+                    .sentAt(LocalDateTime.now())
+                    .status(OtpStatus.SENT)
+                    .build());
+
+        } catch (Exception e) {
+            log.error("SMS 전송 실패: {}, 이유: {}", request.getPhoneNum(), e.getMessage(), e);
+
+            otpLogRepository.save(OtpLog.builder()
+                    .phoneNum(request.getPhoneNum())
+                    .otpCode(code)
+                    .sentAt(LocalDateTime.now())
+                    .status(OtpStatus.FAILED)
+                    .build());
+            throw new CustomException(ErrorCode.SMS_SEND_FAILED);
+        }
+    }
+
+    public void verifyOtp(OtpVerifyRequest request, HttpSession session) {
+        OtpLog otp = otpLogRepository.findTopByPhoneNumAndStatusOrderBySentAtDesc(request.getPhoneNum(), OtpStatus.SENT)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_CODE_NOT_FOUND));
+
+        if (otp.getSentAt().isBefore(LocalDateTime.now().minus(3, ChronoUnit.MINUTES)) ||
+                otp.getStatus() != OtpStatus.SENT) {
+            otp.markUsed();
+            throw new CustomException(ErrorCode.AUTH_CODE_EXPIRED);
+        }
+
+        if (!otp.getOtpCode().equals(request.getOtpCode())) {
+            otp.markUsed();
+            throw new CustomException(ErrorCode.AUTH_CODE_MISMATCH);
+        }
+
+        otp.markVerified();
+        otpLogRepository.save(otp);
+        session.setAttribute("PHONE_VERIFIED_" + request.getPhoneNum(), true);
+    }
+
+    private String generateCode() {
+        return String.valueOf((int)(Math.random() * 900000) + 100000);
+    }
+}

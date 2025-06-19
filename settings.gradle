@@ -1,3 +1,14 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'Livart'
+
+include 'common-lib'
+include 'shop-api'
+include 'erp-api'
 
 
