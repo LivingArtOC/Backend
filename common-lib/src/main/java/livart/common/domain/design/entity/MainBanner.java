@@ -14,6 +14,7 @@ public class MainBanner extends BaseTime {
     private Long id;
     private String fileName;
     private String imageUrl;
+    private String linkUrl;
     private Integer orderIndex;
     private Long createdBy;
 }

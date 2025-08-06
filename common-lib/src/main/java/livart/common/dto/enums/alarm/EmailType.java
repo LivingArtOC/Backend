@@ -15,7 +15,8 @@ public enum EmailType {
     WITHDRAW, // 회원 탈퇴
     MILEAGE_GRANT, // 마일리지 지급
     MILEAGE_DEDUCT, // 마일리지 차감
-    MILEAGE_EXT; // 마일리지 소멸 예정
+    MILEAGE_EXT, // 마일리지 소멸 예정
+    ADMIN_ADDITION; // 관리자 추가
 
 
     public static boolean contains(String value){

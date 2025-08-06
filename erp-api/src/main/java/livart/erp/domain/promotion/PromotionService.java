@@ -222,7 +222,9 @@ public class PromotionService {
                                                 .expireDate(expireDate)
                                                 .discountRate(discountRate)
                                                 .build();
-                                    }).collect(Collectors.toList());
+                                    })
+                                    .sorted(Comparator.comparingLong(AutoCouponList::getCouponId))
+                                    .collect(Collectors.toList());
 
                             return CouponAutoResponse.builder()
                                     .triggerEvents(triggerEvents)
@@ -230,7 +232,8 @@ public class PromotionService {
                                     .couponLists(couponList)
                                     .build();
                         }
-                ).collect(Collectors.toList());
+                )
+                .collect(Collectors.toList());
         return couponAutoGrantsList;
     }
 
@@ -298,7 +301,9 @@ public class PromotionService {
                                                 .expireDate(expireDate)
                                                 .discountRate(discountRate)
                                                 .build();
-                                    }).collect(Collectors.toList());
+                                    })
+                                    .sorted(Comparator.comparingLong(AutoCouponList::getCouponId))
+                                    .collect(Collectors.toList());
 
                             return CouponAutoResponse.builder()
                                     .triggerEvents(triggerEvents)
@@ -306,7 +311,8 @@ public class PromotionService {
                                     .couponLists(couponList)
                                     .build();
                         }
-                ).collect(Collectors.toList());
+                )
+                .collect(Collectors.toList());
         return couponAutoGrantsList;
     }
 
@@ -355,7 +361,9 @@ public class PromotionService {
                             .discountRate(discountRate)
                             .build();
 
-                        }).collect(Collectors.toList());
+                        })
+                .sorted(Comparator.comparingLong(AutoCouponList::getCouponId))
+                .collect(Collectors.toList());
 
         return couponLists;
     }

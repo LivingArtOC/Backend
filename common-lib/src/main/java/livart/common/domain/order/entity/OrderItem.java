@@ -34,6 +34,7 @@ public class OrderItem extends BaseTime {
 
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
+
     private Long couponId;
 
     @Enumerated(EnumType.STRING)
@@ -57,6 +58,10 @@ public class OrderItem extends BaseTime {
     @Builder.Default
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AfterServiceRequest> afterServiceRequests = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderClaim> orderClaims = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)

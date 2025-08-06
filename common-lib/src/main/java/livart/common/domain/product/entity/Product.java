@@ -98,8 +98,8 @@ public class Product extends BaseTime {
         this.updatedBy = updatedBy;
     }
 
-    public void changePrice(BigDecimal originalPrice, Long updatedBy) {
-        this.originalPrice = originalPrice;
+    public void changePrice(BigDecimal salePrice, Long updatedBy) {
+        this.salePrice = salePrice;
         this.updatedBy = updatedBy;
     }
 

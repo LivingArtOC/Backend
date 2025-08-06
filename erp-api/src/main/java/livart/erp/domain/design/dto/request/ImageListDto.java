@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 public class ImageListDto {
     private String fileName;
     private String imageUrl;
+    private String linkUrl;
     private Integer orderIndex;
 }

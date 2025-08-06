@@ -1020,7 +1020,7 @@ public class AlarmService {
             }
         }
 
-        if(request.getType() != null){
+        if(request.getType() != null && request.getType() != SmsAutoType.ALL){
             builder.and(template.smsAutoType.eq(request.getType()));
         }
 

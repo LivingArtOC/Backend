@@ -75,4 +75,12 @@ public class NoticeController {
         SearchResult<NoticeSearchResponse> response = noticeService.getNoticeList(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+
+    @DeleteMapping("/del")
+    @Operation(summary = "✅ 선택 공지사항 삭제 API, 토큰 O")
+    public ResponseEntity<ApiResponse<Void>> deleteNotice(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                          @RequestBody List<Long> idList){
+        noticeService.deleteNotice(customUserDetails, idList);
+        return ResponseEntity.ok(ApiResponse.ok("성공적으로 삭제되었습니다."));
+    }
 }

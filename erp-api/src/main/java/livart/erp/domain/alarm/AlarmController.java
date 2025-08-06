@@ -149,7 +149,7 @@ public class AlarmController {
     }
 
     @PutMapping("/sms/auto")
-    @Operation(summary = "✅ 자동 SMS 설정 각각 저장 & 수정 API, 토큰 O")
+    @Operation(summary = "✅ 자동 SMS 설정 저장 & 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<SmsAutoDto>>> updateAutoSmsSetting(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                               @RequestBody List<SmsAutoDto> request){
         List<SmsAutoDto> response = alarmService.updateAutoSmsSetting(customUserDetails,request);
@@ -237,7 +237,7 @@ public class AlarmController {
     }
 
     @PostMapping("/kakao/send/search")
-    @Operation(summary = "KAKAO 템플릿 목록 검색 API, 토큰 O")
+    @Operation(summary = "✅ KAKAO 템플릿 목록 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<KakaoTemplateSearchResponse>>> searchKakaoTemplate(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody KakaoTemplateSearchRequest request,
@@ -249,7 +249,7 @@ public class AlarmController {
     }
 
     @PostMapping("/kakao/log/send/search")
-    @Operation(summary = "KAKAO 발송 내역 검색 API, 토큰 O")
+    @Operation(summary = "✅ KAKAO 발송 내역 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<KakaoLogSearchResponse>>> searchKakaoLog(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody KakaoLogSearchRequest request,

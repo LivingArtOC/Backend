@@ -55,4 +55,11 @@ public class GuideController {
         GuideResponse response = guideService.updateGuide(customUserDetails, type, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+
+    @GetMapping("/all")
+    @Operation(summary = "✅ 제품 등록 시 기본 AS/교환/환불/배송 안내 문구 통합 조회 API")
+    public ResponseEntity<ApiResponse<List<GuideResponse>>> getAllGuide(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        List<GuideResponse> response = guideService.getAllGuide(customUserDetails);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
 }

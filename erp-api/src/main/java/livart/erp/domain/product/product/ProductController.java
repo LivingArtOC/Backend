@@ -122,15 +122,13 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /*
     @PutMapping("/change-price")
     @Operation(summary = "✅ 상품들 가격 일괄 적용 API, 토큰 O")
-    public ResponseEntity<ApiResponse<List<ProductDeactiveResponse>>> updatePrice(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+    public ResponseEntity<ApiResponse<List<ProductPriceResponse>>> updatePrice(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                                   @RequestBody PriceBatchChangeRequest request){
-        List<ProductDeactiveResponse> response = productService.updatePrice(customUserDetails, request);
+        List<ProductPriceResponse> response = productService.updatePrice(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
-    */
 
     @PostMapping("/display/{categoryId}")
     @Operation(summary = "✅ 상품들 카테고리별 진열 조회 API, 토큰 O")

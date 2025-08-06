@@ -20,10 +20,15 @@ public class Order extends BaseTime {
     private Long id;
     private Long quotationId;
     private Long userId;
+
+    @Column(unique = true)
     private String orderNum;
     private String orderName; // 주문자명
     private String orderEmail; // 주문자 이메일
     private String orderPhoneNum; // 주문자 전화번호
+    private String zipCode; // 배송지 우편번호
+    private String address; // 배송지
+
 
     @Column(precision = 10, scale = 2)
     private BigDecimal usedMileage; // 사용 마일리지
@@ -42,5 +47,13 @@ public class Order extends BaseTime {
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaxInvoice> taxInvoices = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Statement> statements = new ArrayList<>();
 
 }

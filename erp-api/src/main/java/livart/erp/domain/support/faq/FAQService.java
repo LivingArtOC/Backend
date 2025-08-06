@@ -177,4 +177,11 @@ public class FAQService {
                 .build();
     }
 
+    @Transactional
+    public void deleteFAQ(CustomUserDetails customUserDetails, List<Long> idList){
+        globalService.validateAdmin(customUserDetails);
+
+        faqRepository.deleteAllByIdInBatch(idList);
+    }
+
 }

@@ -158,7 +158,7 @@ public class QuotationService {
                             .productName(e.getProductName())
                             .productCode(e.getOptionCode())
                             .hashCode(e.getHashCode())
-                            .productSize(null)
+                            .productSize(opt.getOptionName())
                             .thumbNailImgUrl(e.getThumbNailImgUrl())
                             .quantity(e.getQuantity())
                             .unitOriginalPrice(unitOriginalPrice)

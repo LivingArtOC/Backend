@@ -24,6 +24,7 @@ public class SmsTemplate extends BaseTime {
     @Column(unique = true)
     private SmsType type;
 
+    private String title;
     private Integer sendStandardDate;
     private Integer resendDate;
     private Integer resendTime;

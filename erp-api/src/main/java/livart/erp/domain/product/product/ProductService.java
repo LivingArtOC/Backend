@@ -343,7 +343,7 @@ public class ProductService {
                 )
                 .from(product)
                 .where(builder)
-                .leftJoin(productImage).on(productImage.product.eq(product).and(productImage.imageType.eq(ImageType.THUMBNAIL)))
+                .leftJoin(productImage).on(productImage.product.eq(product).and(productImage.imageType.eq(ImageType.THUMBNAIL_NUKKI)))
                 .orderBy(product.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -381,7 +381,7 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        ProductImage thumbnails = productImageRepository.findByProductAndImageType(product, ImageType.THUMBNAIL);
+        ProductImage thumbnails = productImageRepository.findByProductAndImageType(product, ImageType.THUMBNAIL_NUKKI);
 
         List<OptionAddResponse> optionResponse = new ArrayList<>();
 
@@ -548,9 +548,8 @@ public class ProductService {
 
     }
 
-    /*
     @Transactional
-    public List<ProductDeactiveResponse> updatePrice(CustomUserDetails customUserDetails, PriceBatchChangeRequest request) {
+    public List<ProductPriceResponse> updatePrice(CustomUserDetails customUserDetails, PriceBatchChangeRequest request) {
         globalService.validateAdmin(customUserDetails);
 
         List<Product> productList = productRepository.findAllById(request.getProductIdList());
@@ -558,15 +557,14 @@ public class ProductService {
         productList.forEach(product -> product.changePrice(request.getChangePrice(), customUserDetails.getId()));
 
         return productList.stream()
-                .map(product -> ProductDeactiveResponse.builder()
-                        .optionId(product.getId())
-                        .optionCode(product.getOptionCode())
-                        .optionName(product.getProduct().getProductName() + product.getOptionName())
+                .map(product -> ProductPriceResponse.builder()
+                        .productId(product.getId())
+                        .productName(product.getProductName())
+                        .productCode(product.getProductCode())
                         .status(product.getProductStatus())
                         .build()
                 ).collect(Collectors.toList());
     }
-    */
 
     public SearchResult<ProductDisplayResponse> getDisplay(CustomUserDetails customUserDetails, Long categoryId, Pageable pageable) {
         globalService.validateAdmin(customUserDetails);
@@ -586,7 +584,7 @@ public class ProductService {
                                         .select(productImage.imageUrl)
                                         .from(productImage)
                                         .where(productImage.product.id.eq(p.id),
-                                                productImage.imageType.eq(ImageType.THUMBNAIL))
+                                                productImage.imageType.eq(ImageType.THUMBNAIL_NUKKI))
                                         .limit(1),
                                 "imageUrl"
                         ),
@@ -739,7 +737,7 @@ public class ProductService {
 
     private ProductImage getThumbNail(Product product) {
         return product.getProductImages().stream()
-                .filter(p -> p.getImageType().equals(ImageType.THUMBNAIL))
+                .filter(p -> p.getImageType().equals(ImageType.THUMBNAIL_NUKKI))
                 .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
     }

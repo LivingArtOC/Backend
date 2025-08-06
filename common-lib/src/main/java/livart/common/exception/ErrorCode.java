@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "잘못된 유저 상태 입니다."),
     INVALID_SOCIAL_PROVIDER(HttpStatus.BAD_REQUEST, "잘못된 소셜 타입 입니다."),
     INVALID_TYPE(HttpStatus.BAD_REQUEST, "잘못된 타입 입력 입니다."),
+    INVALID_REQUEST_TYPE(HttpStatus.BAD_REQUEST, "잘못된 요청 타입 입력입니다."),
     NULL_INPUT_IP_LIST(HttpStatus.BAD_REQUEST, "IP 리스트가 NULL 입니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지 크기는 50MB 이하만 가능합니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "업로드한 이미지 형식이 기준에 적합하지 않습니다."),
@@ -43,6 +44,7 @@ public enum ErrorCode {
 
     // 403 FORBIDDEN
     ADMIN_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 사이트는 관리자만 이용하실 수 있습니다."),
+    ONLY_SUPER_ADMIN(HttpStatus.FORBIDDEN, "해당 페이지는 최고 관리자만 접근 가능합니다."),
     USER_STATUS_BLOCKED(HttpStatus.FORBIDDEN, "사용자의 계정이 삭제되었거나 존재하지 않습니다."),
     ADMIN_LOGIN_DISABLED(HttpStatus.FORBIDDEN, "해당 사이트에 대한 접근이 제한되어 있습니다."),
     ACCESS_DENIED_BY_IP(HttpStatus.FORBIDDEN, "허용되지 않은 IP로 접근은 불가합니다."),
@@ -88,6 +90,8 @@ public enum ErrorCode {
     SMS_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "저장된 메시지 중 해당 SMS 메시지를 찾을 수 없습니다."),
     SMS_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 SMS 발송 기록을 찾을 수 없습니다."),
     TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 알림톡 템플릿을 찾을 수 없습니다."),
+    CLAIM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 CLAIM 요청을 찾을 수 없습니다."),
+    AS_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AS 요청을 찾을 수 없습니다."),
 
     // 405 METHOD_NOT_ALLOWED
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 HTTP 메서드입니다."),

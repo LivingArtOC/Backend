@@ -4,6 +4,7 @@ import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 
 public enum OrderStatus {
+
     EXCHANGED, // 교환됨
     RETURNED , // 반품됨
     REFUNDED , // 환불됨
