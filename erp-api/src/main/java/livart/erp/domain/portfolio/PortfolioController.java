@@ -98,7 +98,7 @@ public class PortfolioController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PostMapping("/porfolio/display")
+    @PostMapping("/portfolio/display")
     @Operation(summary = "✅ 납품 사례 진열 관리 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<PfDisplayResponse>>> getDisplayPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -110,7 +110,7 @@ public class PortfolioController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PutMapping("/porfolio/display")
+    @PutMapping("/portfolio/display")
     @Operation(summary = "✅ 납품 사례 진열 관리 수정 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<PfDisplayUpdateResponse>>> updateDisplayPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -120,7 +120,7 @@ public class PortfolioController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PutMapping("/porfolio/pin/{portfolioId}")
+    @PutMapping("/portfolio/pin/{portfolioId}")
     @Operation(summary = "✅ 납품 사례 상단 고정 토글 API, 토큰 O")
     public ResponseEntity<ApiResponse<PfDisplayUpdateResponse>> togglePinned(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,

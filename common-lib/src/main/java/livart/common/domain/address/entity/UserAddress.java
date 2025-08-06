@@ -16,6 +16,9 @@ public class UserAddress extends BaseTime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
+    private String recipient; // 받으실분
+    private String phoneNum;
+
     @Column(nullable = false)
     private String zipcode;
 

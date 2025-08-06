@@ -20,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
@@ -63,6 +65,14 @@ public class FAQController {
 
         SearchResult<FAQResponse> response = faqService.searchFAQ(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @DeleteMapping("/del")
+    @Operation(summary = "✅ 선택 FAQ 삭제 API, 토큰 O")
+    public ResponseEntity<ApiResponse<String>> deleteFAQ(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                              @RequestBody List<Long> idList){
+        faqService.deleteFAQ(customUserDetails, idList);
+        return ResponseEntity.ok(ApiResponse.ok("성공적으로 삭제되었습니다."));
     }
 
 

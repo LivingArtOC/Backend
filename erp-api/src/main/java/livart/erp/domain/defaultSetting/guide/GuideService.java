@@ -187,4 +187,32 @@ public class GuideService {
                 .imageList(imageDtoList)
                 .build();
     }
+
+    public List<GuideResponse> getAllGuide(CustomUserDetails customUserDetails){
+        globalService.validateAdmin(customUserDetails);
+
+        List<Guide> guides = guideRepository.findGuideByTypeIn(GuideType.includedTypes());
+
+        List<GuideResponse> responses = guides.stream()
+                .map(g -> {
+                    List<ImageDto> imageDtoList = g.getGuideImages().stream()
+                            .sorted(Comparator.comparing(GuideImage::getOrderIndex))
+                            .map(i -> ImageDto.builder()
+                                    .orderIndex(i.getOrderIndex())
+                                    .imageUrl(i.getImageUrl())
+                                    .fileName(i.getFileName())
+                                    .build()
+                            ).collect(Collectors.toList());
+
+                    return GuideResponse.builder()
+                            .guideId(g.getId())
+                            .type(g.getType())
+                            .content(g.getContent())
+                            .imageList(imageDtoList)
+                            .build();
+                }
+                ).collect(Collectors.toList());
+
+        return responses;
+    }
 }

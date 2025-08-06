@@ -376,6 +376,14 @@ public class AdminService {
                 .build();
     }
 
+    public void checkSuper(CustomUserDetails customUserDetails){
+        User user = userRepository.findById(customUserDetails.getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if(user.getRole() != Role.SUPER_ADMIN){
+            throw new CustomException(ErrorCode.ONLY_SUPER_ADMIN);
+        }
+    }
+
 
     public void validatePassword(String password) {
         if (password == null || password.length() < 8 || password.length() > 16) {

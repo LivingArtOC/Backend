@@ -88,6 +88,8 @@ public class AuthService {
         Consumer savedConsumer = consumerRepository.save(consumer);
 
         UserAddress address = UserAddress.builder()
+                .recipient(request.getUserName())
+                .phoneNum(request.getPhoneNum())
                 .zipcode(request.getZipcode())
                 .address(request.getAddress())
                 .detailedAddress(request.getDetailedAddress())
@@ -180,6 +182,8 @@ public class AuthService {
         Business savedBiz = businessRepository.save(business);
 
         UserAddress address = UserAddress.builder()
+                .recipient(request.getBizName())
+                .phoneNum(request.getBizPhoneNum())
                 .zipcode(request.getZipcode())
                 .address(request.getAddress())
                 .detailedAddress(request.getDetailedAddress())
@@ -260,6 +264,8 @@ public class AuthService {
 
 
         UserAddress address = UserAddress.builder()
+                .recipient(savedConsumer.getName())
+                .phoneNum(savedConsumer.getPhoneNum())
                 .zipcode(request.getZipcode())
                 .address(request.getAddress())
                 .detailedAddress(request.getDetailedAddress())

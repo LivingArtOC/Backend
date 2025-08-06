@@ -252,4 +252,12 @@ public class NoticeService {
                 .data(responses)
                 .build();
     }
+
+    @Transactional
+    public void deleteNotice(CustomUserDetails customUserDetails, List<Long> idList){
+        globalService.validateAdmin(customUserDetails);
+
+        noticeImageRepository.deleteAllByNoticeIdIn(idList);
+        noticeRepository.deleteAllByIdInBatch(idList);
+    }
 }

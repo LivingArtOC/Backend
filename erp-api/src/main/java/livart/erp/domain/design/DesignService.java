@@ -90,6 +90,7 @@ public class DesignService {
                 .map(image -> ProductBanner.builder()
                                 .fileName(image.getFileName())
                                 .imageUrl(image.getImageUrl())
+                                .linkUrl(image.getLinkUrl())
                                 .orderIndex(image.getOrderIndex())
                                 .createdBy(customUserDetails.getId())
                                 .build()
@@ -97,10 +98,10 @@ public class DesignService {
 
         List<ProductBannerResponse> savedList = productBannerRepository.saveAll(bannerList).stream()
                 .sorted(Comparator.comparing(ProductBanner::getOrderIndex))
-
                 .map(banner -> ProductBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
+                        .linkUrl(banner.getLinkUrl())
                         .orderIndex(banner.getOrderIndex())
                         .build()
                 ).collect(Collectors.toList());
@@ -116,6 +117,7 @@ public class DesignService {
                 .map(banner -> ProductBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
+                        .linkUrl(banner.getLinkUrl())
                         .orderIndex(banner.getOrderIndex())
                         .build()
                 ).collect(Collectors.toList());
@@ -238,7 +240,7 @@ public class DesignService {
             }
         }
 
-        if(request.getStatus() != null){
+        if(request.getStatus() != null && request.getStatus() != PopupStatus.ALL){
             builder.and(popup.status.eq(request.getStatus()));
         }
 
@@ -290,7 +292,7 @@ public class DesignService {
 
 
     @Transactional
-    public List<PopupDeleteResponse> deletePopupList(CustomUserDetails customUserDetails, List<Long> popupIdList){
+    public void deletePopupList(CustomUserDetails customUserDetails, List<Long> popupIdList){
         globalService.validateAdmin(customUserDetails);
 
         List<Popup> popupList = popupRepository.findAllById(popupIdList);
@@ -299,17 +301,8 @@ public class DesignService {
             throw new CustomException(ErrorCode.POPUP_NOT_FOUND); // 일부 누락되었을 경우
         }
 
-        popupList.forEach(popup -> popup.updateStatus(PopupStatus.DELETED));
+        popupRepository.deleteAll(popupList);
 
-        popupRepository.saveAll(popupList);
-
-        return popupList.stream()
-                .map(popup -> PopupDeleteResponse.builder()
-                        .popId(popup.getId())
-                        .title(popup.getTitle())
-                        .status(popup.getStatus())
-                        .build()
-                ).collect(Collectors.toList());
     }
 
     @Transactional
@@ -447,6 +440,7 @@ public class DesignService {
                 .map(image -> MainBanner.builder()
                         .fileName(image.getFileName())
                         .imageUrl(image.getImageUrl())
+                        .linkUrl(image.getLinkUrl())
                         .orderIndex(image.getOrderIndex())
                         .createdBy(customUserDetails.getId())
                         .build()
@@ -457,6 +451,7 @@ public class DesignService {
                 .map(banner -> MainBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
+                        .linkUrl(banner.getLinkUrl())
                         .orderIndex(banner.getOrderIndex())
                         .build()
                 ).collect(Collectors.toList());
@@ -472,6 +467,7 @@ public class DesignService {
                 .map(banner -> MainBannerResponse.builder()
                         .fileName(banner.getFileName())
                         .imageUrl(banner.getImageUrl())
+                        .linkUrl(banner.getLinkUrl())
                         .orderIndex(banner.getOrderIndex())
                         .build()
                 ).collect(Collectors.toList());

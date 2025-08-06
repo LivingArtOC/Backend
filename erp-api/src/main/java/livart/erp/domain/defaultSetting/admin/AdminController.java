@@ -134,4 +134,12 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(responseList));
     }
 
+    @GetMapping("/super")
+    @Operation(summary = "✅ 최고 관리자인지 확인하는 API, 토큰 O")
+    public ResponseEntity<ApiResponse<String>> checkSuperAdmin(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        adminService.checkSuper(customUserDetails);
+        return ResponseEntity.ok(ApiResponse.ok("최고관리자입니다."));
+    }
+
+
 }

@@ -222,6 +222,8 @@ public class MemberService {
 
     private UserAddress buildUserAddress(User user, MemberRequest request) {
         return UserAddress.builder()
+                .recipient(request.getName())
+                .phoneNum(user.getPhoneNum())
                 .zipcode(request.getZipcode())
                 .address(request.getAddress())
                 .detailedAddress(request.getDetailedAddress())

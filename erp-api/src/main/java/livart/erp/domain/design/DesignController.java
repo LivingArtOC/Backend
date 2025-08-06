@@ -94,12 +94,12 @@ public class DesignController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @PutMapping("/popup/del")
+    @DeleteMapping("/popup/del")
     @Operation(summary = "✅ 팝업 삭제 처리 API, 토큰 O")
-    public ResponseEntity<ApiResponse<List<PopupDeleteResponse>>> deletePopupList(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+    public ResponseEntity<ApiResponse<String>> deletePopupList(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                                   @RequestBody List<Long> popupIdList){
-        List<PopupDeleteResponse> responseList = designService.deletePopupList(customUserDetails, popupIdList);
-        return ResponseEntity.ok(ApiResponse.ok(responseList));
+        designService.deletePopupList(customUserDetails, popupIdList);
+        return ResponseEntity.ok(ApiResponse.ok("삭제되었습니다."));
     }
 
     @PutMapping("/interior")

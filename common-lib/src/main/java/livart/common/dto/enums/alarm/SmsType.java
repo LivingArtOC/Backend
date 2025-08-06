@@ -23,6 +23,6 @@ public enum SmsType {
     PRODUCT_REVIEW, // 상품 후기
     INQUIRY, // 1:1 문의 등록
     RESTOCK, // 재입고 알림
-    QUOTATION_CREATE // 견적서 생성 알림
-
+    QUOTATION_CREATE, // 견적서 생성 알림
+    ADMIN_ADDITION // 관리자 추가
 }

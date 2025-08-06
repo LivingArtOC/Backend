@@ -1,4 +1,4 @@
-package livart.shop;
+package livart.erp.security.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -16,10 +16,10 @@ import java.util.List;
 public class SwaggerConfig {
 
     @Bean
-    public GroupedOpenApi shopApi() {
+    public GroupedOpenApi erpApi() {
         return GroupedOpenApi.builder()
-                .group("shop-api")
-                .pathsToMatch("/api/shop/**")
+                .group("erp-api")
+                .pathsToMatch("/api/erp/**")
                 .build();
     }
 
@@ -29,10 +29,10 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("ArtLiving Project")
                         .version("1.0")
-                        .description("가구 쇼핑몰 플랫폼 API 문서"))
+                        .description("가구 쇼핑몰 플랫폼 ERP API 문서"))
                 .servers(List.of(
-                        new Server().url("http://localhost:8081").description("로컬 환경"),
-                        new Server().url("http://52.78.209.179").description("운영 서버")
+                        new Server().url("http://localhost:8080").description("로컬 환경"),
+                        new Server().url("http://52.78.209.179:8080").description("운영 서버")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
