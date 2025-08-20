@@ -1,5 +1,6 @@
 package livart.common.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import livart.common.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,9 +22,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(errorCode.getMessage()));
     }
 
-    // 정의되지 않은 모든 예외 처리 (안정성 확보)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception ex, HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        // Swagger 관련 요청은 전역 예외 처리에서 제외
+        if (uri.contains("swagger-ui") || uri.contains("api-docs")) {
+            throw new RuntimeException(ex); // DispatcherServlet에 다시 위임
+        }
+
         log.error("Unhandled Exception 발생", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
