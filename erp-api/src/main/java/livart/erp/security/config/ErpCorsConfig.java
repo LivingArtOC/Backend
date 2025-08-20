@@ -12,10 +12,12 @@ public class ErpCorsConfig {
     @Bean(name = "erpCorsConfigurationSource")
     public CorsConfigurationSource erpCorsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://prolink123.store");
+        config.addAllowedOrigin("https://www.artliving.store");
+        config.addAllowedOrigin("https://api.artliving.store");
         config.addAllowedOrigin("http://localhost:8080");
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("http://52.78.209.179");
+        config.addAllowedOrigin("http://ec2-43-203-150-151.ap-northeast-2.compute.amazonaws.com");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(false);
