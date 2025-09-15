@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import livart.common.Auth.AuthTokens;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.Auth.RefreshToken;
 import livart.common.Auth.dto.request.LoginRequest;
 import livart.common.Auth.repository.RefreshTokenRepository;
+import livart.erp.security.util.CookieProps;
+import livart.erp.security.util.CookieUtil;
+import livart.erp.security.util.CsrfTokenUtil;
 import livart.common.Auth.util.JwtTokenProvider;
 import livart.common.domain.setting.entity.AllowedAdminIp;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
@@ -38,10 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -55,6 +54,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AdminRepository adminRepository;
 
     private final RestrictIpRepository restrictIpRepository;
+    private final CookieProps cookieProps;
 
     public ErpLoginFilter(AuthenticationManager authenticationManager,
                           JwtTokenProvider jwtTokenProvider,
@@ -63,7 +63,8 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                           LoginHistoryRepository loginHistoryRepository,
                           AllowedAdminIpsRepository allowedAdminIpsRepository,
                           RestrictIpRepository restrictIpRepository,
-                          AdminRepository adminRepository) {
+                          AdminRepository adminRepository,
+                          CookieProps cookieProps) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -72,6 +73,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
         this.loginHistoryRepository = loginHistoryRepository;
         this.restrictIpRepository = restrictIpRepository;
         this.allowedAdminIpsRepository = allowedAdminIpsRepository;
+        this.cookieProps = cookieProps;
         setFilterProcessesUrl("/api/erp/auth/login");   // 로그인 요청 URI
     }
 
@@ -173,21 +175,43 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
                         }).orElse(RefreshToken.builder()
                         .userId(userDetails.getId())
                         .refreshToken(refreshToken)
-                        .expiredAt(LocalDateTime.now().plus(Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())))
+                        .expiredAt(LocalDateTime.now()
+                                .plus(Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())))
                         .build());
 
         refreshTokenRepository.save(refreshTokenEntity);
 
         String clientIp = getClientIp(request);
 
+        String xsrf = CsrfTokenUtil.generate();
+
+        // 4) 쿠키 발급 (CookieProps 주입 필요)
+        var cd = cookieProps.domain();
+        var secure = cookieProps.secure();
+
+        CookieUtil.add(response, CookieUtil.build(
+                "access_token", accessToken, cd, "/",
+                true, cookieProps.sameSite(), secure,
+                Duration.ofMillis(jwtTokenProvider.getAccessExpiration())
+        ));
+
+        CookieUtil.add(response, CookieUtil.build(
+                "refresh_token", refreshToken, cd, "/",
+                true, cookieProps.sameSite(), secure,
+                Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())
+        ));
+        CookieUtil.add(response, CookieUtil.build(
+                "XSRF-TOKEN", xsrf, cd, "/",
+                false, cookieProps.sameSite(), secure,
+                Duration.ofMillis(jwtTokenProvider.getAccessExpiration())
+        ));
+
+
         // 🛡️ 인증 정보 SecurityContext 에 등록
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        response.setHeader("Authorization", "Bearer " + accessToken);
-
-        AuthTokens authTokens = AuthTokens.of(accessToken, refreshToken, "Bearer", 1800L);
         response.setContentType("application/json");
-        new ObjectMapper().writeValue(response.getWriter(), authTokens);
+        new ObjectMapper().writeValue(response.getWriter(), Map.of("ok", true));
 
         log.info("로그인 성공: {}", userDetails.getUsername());
 
@@ -230,7 +254,7 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
         List<LoginHistory> histories = loginHistoryRepository.findRecentByIpAddress(clientIp, fiveMinutesAgo);
 
-        if(histories.size() >= 5){
+        if(histories.size() >= 300){
             RestrictIp ip = RestrictIp.builder()
                     .restrictReason(RestrictReason.PW_ATT)
                     .ipAddress(clientIp)

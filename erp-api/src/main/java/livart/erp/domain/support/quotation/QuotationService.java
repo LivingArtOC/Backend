@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -174,7 +175,6 @@ public class QuotationService {
         BigDecimal unitPriceSubtotal = BigDecimal.ZERO; // 단가 소계
         BigDecimal priceSubtotalVat = BigDecimal.ZERO; // 공급가액 소계
         BigDecimal discountPrice = BigDecimal.ZERO; // 할인 금액
-        BigDecimal unitTruncation = BigDecimal.ZERO; // 할인 금액의 VAT
 
         for(QuotationProductResponse i : items){
             BigDecimal unitPrice = Optional.ofNullable(i.getUnitSalePrice()).orElse(BigDecimal.ZERO);
@@ -184,7 +184,32 @@ public class QuotationService {
             priceSubtotalVat = priceSubtotalVat.add(priceVat);
         }
 
-        BigDecimal totalPriceInclVat = priceSubtotalVat.subtract(discountPrice.add(unitTruncation));
+        BigDecimal temporaryPrice = priceSubtotalVat.subtract(discountPrice);
+        BigDecimal unit;
+
+        if (temporaryPrice.compareTo(BigDecimal.valueOf(100_000_000)) >= 0) {
+            // 1억 이상이면 100만 단위
+            unit = BigDecimal.valueOf(1_000_000);
+        } else if (temporaryPrice.compareTo(BigDecimal.valueOf(10_000_000)) >= 0) {
+            // 1000만 이상이면 10만 단위
+            unit = BigDecimal.valueOf(100_000);
+        } else if (temporaryPrice.compareTo(BigDecimal.valueOf(1_000_000)) >= 0) {
+            // 100만 이상이면 1만 단위
+            unit = BigDecimal.valueOf(10_000);
+        } else if (temporaryPrice.compareTo(BigDecimal.valueOf(100_000)) >= 0) {
+            // 10만 이상이면 천 단위
+            unit = BigDecimal.valueOf(1_000);
+        } else if (temporaryPrice.compareTo(BigDecimal.valueOf(10_000)) >= 0) {
+            // 만 이상이면 백 단위
+            unit = BigDecimal.valueOf(100);
+        } else {
+            // 기본: 1원 단위
+            unit = BigDecimal.ONE;
+        }
+
+        BigDecimal totalPriceInclVat = temporaryPrice.divide(unit, 0, RoundingMode.DOWN).multiply(unit);
+        BigDecimal unitTruncation = temporaryPrice.subtract(totalPriceInclVat); // 단위절사
+        
         BigDecimal totalPriceExclVat = totalPriceInclVat.multiply(BigDecimal.valueOf(0.9));
 
         response.setTotalPriceInclVat(totalPriceInclVat);

@@ -1,6 +1,7 @@
 package livart;
 
 import livart.common.Auth.JwtLoginProperties;
+import livart.erp.security.util.CookieProps;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -14,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan(basePackages = {"livart.erp", "livart.common"})
 @EntityScan(basePackages = "livart.common")
 @EnableScheduling
-@EnableConfigurationProperties(JwtLoginProperties.class)
+@EnableConfigurationProperties({JwtLoginProperties.class, CookieProps.class})
 public class ErpApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(ErpApiApplication.class, args);
