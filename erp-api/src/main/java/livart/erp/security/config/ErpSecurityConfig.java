@@ -1,6 +1,7 @@
 package livart.erp.security.config;
 
 import livart.common.Auth.repository.RefreshTokenRepository;
+import livart.erp.security.util.CookieProps;
 import livart.common.Auth.util.JwtTokenProvider;
 import livart.common.domain.setting.repository.AllowedAdminIpsRepository;
 import livart.common.domain.user.repository.AdminRepository;
@@ -9,8 +10,8 @@ import livart.common.domain.user.repository.UserRepository;
 import livart.common.log.repository.LoginHistoryRepository;
 import livart.erp.security.ErpJwtAuthenticationFilter;
 import livart.erp.security.ErpLoginFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -30,6 +31,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @Order(2)
+@EnableConfigurationProperties(CookieProps.class)
 public class ErpSecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -40,6 +42,8 @@ public class ErpSecurityConfig {
     private final AllowedAdminIpsRepository allowedAdminIpsRepository;
     private final AdminRepository adminRepository;
     private final RestrictIpRepository restrictIpRepository;
+    private final CookieProps cookieProps;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     public ErpSecurityConfig(JwtTokenProvider jwtTokenProvider,
                              RefreshTokenRepository refreshTokenRepository,
@@ -49,6 +53,7 @@ public class ErpSecurityConfig {
                              LoginHistoryRepository loginHistoryRepository,
                              AllowedAdminIpsRepository allowedAdminIpsRepository,
                              RestrictIpRepository restrictIpRepository,
+                             CookieProps cookieProps,
                              @Qualifier("erpCorsConfigurationSource") CorsConfigurationSource corsConfigurationSource) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -59,31 +64,33 @@ public class ErpSecurityConfig {
         this.restrictIpRepository = restrictIpRepository;
         this.loginHistoryRepository = loginHistoryRepository;
         this.allowedAdminIpsRepository = allowedAdminIpsRepository;
+        this.cookieProps = cookieProps;
     }
-
-    private final CorsConfigurationSource corsConfigurationSource; // 외부 주입
-
     @Bean(name = "erpFilterChain")
     public SecurityFilterChain erpFilterChain(HttpSecurity http,
                                               AuthenticationManager authenticationManager) throws Exception {
         http
                 .securityMatcher("/api/erp/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable())
+                .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true).maxAgeInSeconds(31536000))) // 1년 hsts
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "api/erp/sms/**",
+                                "/api/erp/sms/**",
                                 "/api/erp/auth/login/**",
                                 "/api/erp/auth/refresh",
                                 "/api/erp/client/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/erp/auth/check"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new ErpJwtAuthenticationFilter(jwtTokenProvider, userRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new ErpJwtAuthenticationFilter(jwtTokenProvider, userRepository, cookieProps),
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new ErpLoginFilter(
                         authenticationManager,
                         jwtTokenProvider,
@@ -92,7 +99,8 @@ public class ErpSecurityConfig {
                         loginHistoryRepository,
                         allowedAdminIpsRepository,
                         restrictIpRepository,
-                        adminRepository
+                        adminRepository,
+                        cookieProps
                 ), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
