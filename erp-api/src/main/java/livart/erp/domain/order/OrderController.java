@@ -79,7 +79,7 @@ public class OrderController {
     }
 
     @PostMapping("/claim/search")
-    @Operation(summary = "취소/교환/반품/환불 요청 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ 취소/교환/반품/환불 요청 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<ClaimSearchResponse>>> getClaimList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody ClaimSearchRequest request,
@@ -91,7 +91,7 @@ public class OrderController {
     }
 
     @PutMapping("/claim/status")
-    @Operation(summary = "취소/교환/반품/환불 요청 상태 변경 API, 토큰 O")
+    @Operation(summary = "✅ 취소/교환/반품/환불 요청 상태 변경 API, 토큰 O")
     public ResponseEntity<ApiResponse<ClaimChangeStatusResponse>> changeStatus(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                                @RequestBody ClaimChangeStatusRequest request){
         ClaimChangeStatusResponse response = orderService.changeStatus(customUserDetails, request);
@@ -99,7 +99,7 @@ public class OrderController {
     }
 
     @PostMapping("/as/search")
-    @Operation(summary = "A/S 요청 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ A/S 요청 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<AsSearchResponse>>> getAsList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody AsSearchRequest request,
@@ -110,8 +110,17 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/as/image/{asId}")
+    @Operation(summary = "✅ 특정 A/S 요청의 image/video 목록 조회 API, 토큰 O")
+    public ResponseEntity<ApiResponse<List<AsImageResponse>>> getAsImageList(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                       @PathVariable Long asId){
+        List<AsImageResponse> response = orderService.getAsImageList(customUserDetails, asId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+
     @PutMapping("/as/status")
-    @Operation(summary = "A/S 요청 상태 변경 API, 토큰 O")
+    @Operation(summary = "✅ A/S 요청 상태 변경 API, 토큰 O")
     public ResponseEntity<ApiResponse<AsChangeStatusResponse>> changeAsStatus(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                               @RequestBody AsChangeStatusRequest request){
         AsChangeStatusResponse response = orderService.changeAsStatus(customUserDetails, request);
@@ -119,7 +128,7 @@ public class OrderController {
     }
 
     @PostMapping("/tax/search")
-    @Operation(summary = "세금계산서 발급 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ 세금계산서 발급 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<TaxSearchResponse>>> getTaxList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody TaxSearchRequest request,
@@ -131,7 +140,7 @@ public class OrderController {
     }
 
     @PostMapping("/state/search")
-    @Operation(summary = "거래명세서 리스트 검색 API, 토큰 O")
+    @Operation(summary = "✅ 거래명세서 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<StateSearchResponse>>> getStateList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody StateSearchRequest request,
@@ -143,7 +152,7 @@ public class OrderController {
     }
 
     @GetMapping("/state/supply/{orderId}")
-    @Operation(summary = "거래명세서 직접 등록 시 공급자에 들어갈 정보 조회 API, 토큰 O")
+    @Operation(summary = "✅ 거래명세서 직접 등록 시 공급자에 들어갈 정보 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<SupplyInfoResponse>> getInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                    @PathVariable Long orderId){
         SupplyInfoResponse response = orderService.getInfo(customUserDetails, orderId);
@@ -151,7 +160,7 @@ public class OrderController {
     }
 
     @PutMapping("/state/supply/{orderId}")
-    @Operation(summary = "거래명세서 공급자 정보 수정 및 저장 API, 토큰 O")
+    @Operation(summary = "✅ 거래명세서 공급자 정보 수정 및 저장 API, 토큰 O")
     public ResponseEntity<ApiResponse<SupplyInfoResponse>> updateInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                       @RequestBody SupplyInfoRequest request,
                                                                       @PathVariable Long orderId){
@@ -159,8 +168,8 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @GetMapping("/state/info")
-    @Operation(summary = "거래명세서 내용 조회 API, 토큰 O")
+    @GetMapping("/state/info/{orderId}")
+    @Operation(summary = "✅ 거래명세서 내용 조회 API, 토큰 O")
     public ResponseEntity<ApiResponse<StatementResponse>> getStatement(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                       @PathVariable Long orderId){
         StatementResponse response = orderService.getStatement(customUserDetails, orderId);

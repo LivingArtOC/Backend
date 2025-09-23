@@ -10,7 +10,9 @@ import livart.common.domain.user.repository.UserRepository;
 import livart.common.log.repository.LoginHistoryRepository;
 import livart.erp.security.ErpJwtAuthenticationFilter;
 import livart.erp.security.ErpLoginFilter;
+import livart.erp.security.util.ErpJwtHeaderFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +35,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Order(2)
 @EnableConfigurationProperties(CookieProps.class)
 public class ErpSecurityConfig {
-
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
@@ -102,6 +105,13 @@ public class ErpSecurityConfig {
                         adminRepository,
                         cookieProps
                 ), UsernamePasswordAuthenticationFilter.class);
+
+        if ("local".equals(activeProfile)) {
+            http.addFilterBefore(
+                    new ErpJwtHeaderFilter(jwtTokenProvider, userRepository),
+                    UsernamePasswordAuthenticationFilter.class
+            );
+        }
 
         return http.build();
     }

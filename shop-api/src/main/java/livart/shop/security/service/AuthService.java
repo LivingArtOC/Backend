@@ -1,7 +1,12 @@
 package livart.shop.security.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import livart.common.Auth.AuthTokens;
 import livart.common.Auth.CustomUserDetails;
+import livart.common.Auth.RefreshToken;
+import livart.common.Auth.dto.request.LoginRequest;
+import livart.common.Auth.repository.RefreshTokenRepository;
+import livart.common.Auth.util.JwtTokenProvider;
 import livart.common.domain.address.entity.UserAddress;
 import livart.common.domain.address.repository.UserAddressRepository;
 import livart.common.domain.alarm.entity.UserMKConsent;
@@ -33,17 +38,25 @@ import livart.common.log.repository.PasswordLogRepository;
 import livart.common.service.GlobalService;
 import livart.shop.security.dto.request.*;
 import livart.shop.security.dto.response.LoginIdResponse;
+import livart.shop.security.dto.response.LoginResponse;
 import livart.shop.security.dto.response.SignupResponse;
 import livart.shop.security.dto.response.SignupTermsResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -64,6 +77,9 @@ public class AuthService {
     private final LoginHistoryRepository loginHistoryRepository;
     private final OtpLogRepository otpLogRepository;
     private final PasswordLogRepository passwordLogRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public SignupResponse signupConsumer(ConsumerSignupRequest request){
@@ -424,6 +440,88 @@ public class AuthService {
                         .content(t.getContent())
                         .build()
                 ).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public AuthTokens login(LoginRequest request, HttpServletRequest httpServletRequest) throws IOException {
+
+        if (!StringUtils.hasText(request.getLoginId()) || !StringUtils.hasText(request.getPassword())) {
+            throw new CustomException(ErrorCode.NULL_INPUT_VALUE);
+        }
+
+        User user = userRepository.findByLoginId(request.getLoginId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        String clientIp = getClientIp(httpServletRequest);
+
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getLoginId(), request.getPassword())
+        );
+
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+
+        String accessToken = jwtTokenProvider.generate(
+                userDetails.getUsername(),
+                userDetails.getRole(),
+                userDetails.getProvider(),
+                new Date(System.currentTimeMillis() + jwtTokenProvider.getAccessExpiration())
+        );
+
+        String refreshToken = jwtTokenProvider.generate(
+                userDetails.getUsername(),
+                userDetails.getRole(),
+                userDetails.getProvider(),
+                new Date(System.currentTimeMillis() + jwtTokenProvider.getRefreshExpiration())
+        );
+
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(user.getId())
+                .map(token -> {
+                    token.updateToken(refreshToken, LocalDateTime.now().plus(Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())));
+                    return token;
+                }).orElse(RefreshToken.builder()
+                        .userId(user.getId())
+                        .refreshToken(refreshToken)
+                        .expiredAt(LocalDateTime.now().plus(Duration.ofMillis(jwtTokenProvider.getRefreshExpiration())))
+                        .build());
+
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        loginHistoryRepository.save(LoginHistory.builder()
+                .loginId(user.getLoginId())
+                .userId(user.getId())
+                .ipAddress(clientIp)
+                .userAgent(httpServletRequest.getHeader("User-Agent"))
+                .success(true)
+                .failReason(null)
+                .site("ERP")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return AuthTokens.of(accessToken, refreshToken, "Bearer", 1800L);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String[] headerNames = {
+                "X-Forwarded-For",
+                "Proxy-Client-IP",
+                "WL-Proxy-Client-IP",
+                "HTTP_CLIENT_IP",
+                "HTTP_X_FORWARDED_FOR"
+        };
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // X-Forwarded-For: "clientIP, proxy1, proxy2" → 맨 앞 IP가 진짜
+                return ip.split(",")[0].trim();
+            }
+        }
+
+        return request.getRemoteAddr();
     }
 
 }

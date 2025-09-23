@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StatementRepository extends JpaRepository<Statement, Long> {
-    Optional<Statement> findFirstByOrderOrderByIdDesc(Order order);
+    Optional<Statement> findByOrderId(Long orderId);
 }

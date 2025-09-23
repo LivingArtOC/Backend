@@ -21,7 +21,5 @@ public class AsSearchResponse {
     private String orderName;
     private String orderItemName;
     private String reason;
-    private String fileUrl;
-    private String fileName;
     private RequestStatus status;
 }

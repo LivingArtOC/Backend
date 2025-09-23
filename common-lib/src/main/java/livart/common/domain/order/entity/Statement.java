@@ -15,7 +15,7 @@ public class Statement extends BaseTime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String deliveryDate;
-    private String accountNum;
+    private String accountNum = "1005-103-498953 우리은행";
     private Long handledBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
