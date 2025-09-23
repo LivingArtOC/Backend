@@ -19,7 +19,6 @@ public class StatementResponse {
     private String bizNum;
     private String address;
     private String phoneNum;
-    private BigDecimal usedMileage; // 사용된 마일리지
     private BigDecimal totalPriceExclVat; // 부가세 별도 총 금액
     private BigDecimal totalPriceInclVat; // 부가세 포함 총 금액
     private Integer quantitySubtotal; // 수량 소계

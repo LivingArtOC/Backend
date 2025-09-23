@@ -34,7 +34,13 @@ public class Order extends BaseTime {
     private BigDecimal usedMileage; // 사용 마일리지
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal totalItemPrice; // 상품 판매가(쿠폰 적용 금액의 총합)
+    private BigDecimal totalItemPrice; // 상품 판매가(쿠폰 적용 금액의 총합), 쿠폰 할인 금액만
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal unitTruncation; // 단위 절사
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal discountPrice; // 할인 금액
 
     @Column(precision = 10, scale = 2)
     private BigDecimal finalPaidAmount; // 최종 결제 금액

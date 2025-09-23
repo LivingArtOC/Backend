@@ -72,6 +72,9 @@ public class User extends BaseTime {
     @Lob
     private String adminMemo;
 
+    private String refundAccNum; // 환불 계좌
+    private String refundBank; // 환불 은행
+
     @Setter
     private LocalDateTime dormantAt;
 

@@ -24,7 +24,7 @@ public class TaxInvoice extends BaseTime {
     @Enumerated(EnumType.STRING)
     private TaxStatus status;
 
-    private String errorMessage;
+    private String errorMessage; // 발급시 발생하는 에러 메세지
     private String pdfUrl;
 
     private String companyName; // 상호명

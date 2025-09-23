@@ -6,7 +6,7 @@ public enum RequestStatus {
     EXCHANGED, // 교환 완료
     REFUNDED, // 환불 완료
     RETURNED, // 반품 완료
-    CANCELED, // 요청 취소됨
+    CANCELED, // 요청 취소됨(철회)
     ALL; // 통합 검색
 
     public static boolean contains(RequestStatus status) {

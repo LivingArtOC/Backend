@@ -3,10 +3,13 @@ package livart.shop.security.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import livart.common.Auth.AuthTokens;
 import livart.common.Auth.CustomUserDetails;
+import livart.common.Auth.dto.request.LoginRequest;
 import livart.common.dto.response.ApiResponse;
 import livart.shop.security.dto.request.*;
 import livart.shop.security.dto.response.LoginIdResponse;
+import livart.shop.security.dto.response.LoginResponse;
 import livart.shop.security.dto.response.SignupResponse;
 import livart.shop.security.dto.response.SignupTermsResponse;
 import livart.shop.security.service.AuthService;
@@ -17,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -84,6 +88,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<List<SignupTermsResponse>>> getSignupTerms(){
         List<SignupTermsResponse> responses = authService.getSignupTerms();
         return ResponseEntity.ok(ApiResponse.ok(responses));
+    }
+
+    @PostMapping("/login/test")
+    @Operation(summary = "✅ 테스트 로그인 API, 토큰 X")
+    public ResponseEntity<ApiResponse<AuthTokens>> login(@RequestBody LoginRequest request, HttpServletRequest httpServletRequest) throws IOException {
+        return ResponseEntity.ok(ApiResponse.ok(authService.login(request, httpServletRequest)));
     }
 
 

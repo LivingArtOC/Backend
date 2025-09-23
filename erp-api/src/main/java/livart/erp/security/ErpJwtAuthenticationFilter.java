@@ -15,6 +15,7 @@ import livart.erp.security.util.CookieUtil;
 import livart.erp.security.util.CsrfTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 public class ErpJwtAuthenticationFilter extends OncePerRequestFilter {
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
@@ -38,7 +41,7 @@ public class ErpJwtAuthenticationFilter extends OncePerRequestFilter {
     private static boolean csrfExcluded(String uri) {
         return uri.startsWith("/api/erp/auth/login")
                 || uri.startsWith("/api/erp/auth/refresh")
-                || uri.equals("/swagger-ui/index.html")
+                || uri.equals("/swagger-ui.html")
                 || uri.startsWith("/swagger-ui/")
                 || uri.startsWith("/v3/api-docs/")
                 || uri.equals("/error");
@@ -85,7 +88,8 @@ public class ErpJwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 2) 변이 요청이면 더블 서브밋 검사 (로그인/리프레시는 제외)
             boolean unsafe = !SAFE.contains(method);
-            if (unsafe && !isAuthPath) {
+            boolean isLocal = "local".equalsIgnoreCase(activeProfile != null ? activeProfile.trim() : "");
+            if (unsafe && !isAuthPath && isLocal) {
                 String csrfCookie = cookie(request, "XSRF-TOKEN");
                 String csrfHeader = request.getHeader("X-XSRF-TOKEN");
                 if (csrfCookie == null || !csrfCookie.equals(csrfHeader)) {

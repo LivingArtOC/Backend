@@ -55,6 +55,7 @@ public class OrderService {
     private final ConsumerRepository consumerRepository;
     private final OrderRepository orderRepository;
     private final StatementRepository statementRepository;
+    private final AsImageRepository asImageRepository;
 
     public SearchResult<OrderAllResponse> getAllOrders(CustomUserDetails customUserDetails, OrderSearchRequest request, Pageable pageable){
         globalService.validateAdmin(customUserDetails);
@@ -794,8 +795,6 @@ public class OrderService {
                         orderItem.productName,
                         orderItem.itemName,
                         afterServiceRequest.requestReason,
-                        afterServiceRequest.fileName,
-                        afterServiceRequest.fileUrl,
                         afterServiceRequest.status
                 )
                 .from(afterServiceRequest)
@@ -823,8 +822,6 @@ public class OrderService {
                                     .orderName(r.get(order.orderName))
                                     .orderItemName(itemName)
                                     .reason(Optional.ofNullable(r.get(afterServiceRequest.requestReason)).orElse(""))
-                                    .fileName(Optional.ofNullable(r.get(afterServiceRequest.fileName)).orElse(""))
-                                    .fileUrl(Optional.ofNullable(r.get(afterServiceRequest.fileUrl)).orElse(""))
                                     .status(r.get(afterServiceRequest.status))
                                     .build();
                         }
@@ -845,6 +842,24 @@ public class OrderService {
                 .size(pageable.getPageSize())
                 .data(responses)
                 .build();
+    }
+
+    public List<AsImageResponse> getAsImageList(CustomUserDetails customUserDetails, Long asId){
+        globalService.validateAdmin(customUserDetails);
+
+        AfterServiceRequest as = afterServiceRequestRepository.findById(asId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AS_NOT_FOUND));
+
+        List<ASImage> images = asImageRepository.findASImagesByAfterServiceRequest(as);
+
+        return images.stream()
+                .map(image -> AsImageResponse.builder()
+                        .imageId(image.getId())
+                        .imageType(image.getType())
+                        .fileUrl(image.getFileUrl())
+                        .fileName(image.getFileName())
+                        .build()
+                ).collect(Collectors.toList());
     }
 
     @Transactional
@@ -1202,7 +1217,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-        Optional<Statement> statement = statementRepository.findFirstByOrderOrderByIdDesc(order);
+        Optional<Statement> statement = statementRepository.findByOrderId(orderId);
 
         String deliveryDate = statement.map(Statement::getDeliveryDate).orElse("-");
         String accountNum = statement.map(Statement::getAccountNum).orElse("-");
@@ -1230,24 +1245,19 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-        Optional<Statement> statement = statementRepository.findFirstByOrderOrderByIdDesc(order);
+        Optional<Statement> statement = statementRepository.findByOrderId(orderId);
 
-        Statement stt;
+        Statement stt = statement.orElseGet(() ->
+                Statement.builder()
+                        .accountNum(request.getAccountNum())
+                        .deliveryDate(request.getDeliveryDate())
+                        .handledBy(customUserDetails.getId())
+                        .order(order)
+                        .build()
+        );
 
-        if (statement.isPresent()) {
-            stt = statement.get();
-
-            stt.update(request.getDeliveryDate(), request.getAccountNum(), customUserDetails.getId());
-        }else {
-            stt = Statement.builder()
-                    .accountNum(request.getAccountNum())
-                    .deliveryDate(request.getDeliveryDate())
-                    .handledBy(customUserDetails.getId())
-                    .order(order)
-                    .build();
-
-            statementRepository.save(stt);
-        }
+        stt.update(request.getDeliveryDate(), request.getAccountNum(), customUserDetails.getId());
+        statementRepository.save(stt);
 
         CompanyInfo companyInfo = companyInfoRepository.findById(1L)
                 .orElseThrow(() -> new CustomException(ErrorCode.COMPANY_INFO_NOT_FOUND));
@@ -1338,6 +1348,8 @@ public class OrderService {
                     .build();
 
             productResponseList.add(response);
+
+            unitSubtotalVat = unitSubtotalVat.add(item.getFinalPrice());
         }
 
         BigDecimal totalPriceInclVat = ord.getFinalPaidAmount();
@@ -1350,7 +1362,14 @@ public class OrderService {
                 .bizNum(bizNum)
                 .address(ord.getAddress())
                 .phoneNum(ord.getOrderPhoneNum())
-                .usedMileage(ord.getUsedMileage())
+                .totalPriceInclVat(totalPriceInclVat)
+                .totalPriceExclVat(totalPriceExclVat)
+                .quantitySubtotal(quantitySubtotal)
+                .unitSubtotalVat(unitSubtotalVat)
+                .priceSubtotal(ord.getTotalItemPrice())
+                .totalDiscount(ord.getDiscountPrice())
+                .unitTruncation(ord.getUnitTruncation())
+                .productList(productResponseList)
                 .build();
 
 
