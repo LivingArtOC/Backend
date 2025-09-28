@@ -98,6 +98,22 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/claim/detail/{claimId}")
+    @Operation(summary = "✅ 취소/교환/반품/환불 특정 요청 상세 조회 API, 토큰 O")
+    public ResponseEntity<ApiResponse<ClaimDetailResponse>> getClaimDetail(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                           @PathVariable Long claimId){
+        ClaimDetailResponse response = orderService.getClaimDetail(customUserDetails, claimId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PutMapping("/claim/detail")
+    @Operation(summary = "✅ 취소/교환/반품/환불 특정 요청 상세 내용 수정 API, 토큰 O")
+    public ResponseEntity<ApiResponse<ClaimDetailResponse>> updateClaimDetail(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                           @RequestBody ClaimDetailRequest request){
+        ClaimDetailResponse response = orderService.updateClaimDetail(customUserDetails, request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @PostMapping("/as/search")
     @Operation(summary = "✅ A/S 요청 리스트 검색 API, 토큰 O")
     public ResponseEntity<ApiResponse<SearchResult<AsSearchResponse>>> getAsList(
