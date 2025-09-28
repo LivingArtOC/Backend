@@ -314,6 +314,7 @@ public class DesignService {
                     existing.update(
                             request.getEmail(),
                             request.getFaxNum(),
+                            request.getCounselNum(),
                             request.getDirections(),
                             request.getUsageGuide(),
                             customUserDetails.getId());
@@ -322,6 +323,7 @@ public class DesignService {
                 .orElseGet(() -> InteriorsInfo.builder()
                         .email(request.getEmail())
                         .faxNum(request.getFaxNum())
+                        .counselNum(request.getCounselNum())
                         .directions(request.getDirections())
                         .usageGuide(request.getUsageGuide())
                         .createdBy(customUserDetails.getId())
@@ -384,7 +386,8 @@ public class DesignService {
 
         return InteriorInfoResponse.builder()
                 .email(savedInfo.getEmail())
-                .paxNum(savedInfo.getFaxNum())
+                .faxNum(savedInfo.getFaxNum())
+                .counselNum(savedInfo.getCounselNum())
                 .directions(savedInfo.getDirections())
                 .usageGuide(savedInfo.getUsageGuide())
                 .hours(hours)
@@ -420,7 +423,8 @@ public class DesignService {
 
         return InteriorInfoResponse.builder()
                 .email(info.getEmail())
-                .paxNum(info.getFaxNum())
+                .faxNum(info.getFaxNum())
+                .counselNum(info.getCounselNum())
                 .directions(info.getDirections())
                 .usageGuide(info.getUsageGuide())
                 .hours(hours)
@@ -475,6 +479,10 @@ public class DesignService {
     }
 
     public void checkDuplicate(List<ImageListDto> request){
+        if(request.size() > 5 || request.size() < 0){
+            throw new CustomException(ErrorCode.INVALID_IMAGE_SIZE);
+        }
+
         boolean hasDuplicate = request.stream()
                 .map(ImageListDto::getOrderIndex)
                 .collect(Collectors.toSet())

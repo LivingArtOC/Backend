@@ -10,6 +10,7 @@ import java.util.Map;
 public class InteriorInfoRequest {
     private String email;
     private String faxNum;
+    private String counselNum;
     private String directions;
     private String usageGuide;
     private Map<DayType, TimeRange> hours;

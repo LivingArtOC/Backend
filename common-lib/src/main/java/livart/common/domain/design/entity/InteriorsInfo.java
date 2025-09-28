@@ -14,6 +14,7 @@ public class InteriorsInfo extends BaseTime {
     private Long id = 1L;
     private String email;
     private String faxNum;
+    private String counselNum;
 
     @Lob
     private String directions;
@@ -23,9 +24,10 @@ public class InteriorsInfo extends BaseTime {
     private Long createdBy;
     private Long updatedBy;
 
-    public  void update(String email, String faxNum, String directions, String usageGuide, Long updatedBy){
+    public  void update(String email, String faxNum,String counselNum, String directions, String usageGuide, Long updatedBy){
         this.email = email;
         this.faxNum = faxNum;
+        this.counselNum = counselNum;
         this.directions = directions;
         this.usageGuide = usageGuide;
         this.updatedBy = updatedBy;

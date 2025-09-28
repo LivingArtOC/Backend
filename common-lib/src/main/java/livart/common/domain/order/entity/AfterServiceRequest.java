@@ -34,16 +34,6 @@ public class AfterServiceRequest extends BaseTime {
     private RequestStatus status;
 
     private LocalDateTime completeDate;
-    private LocalDate returnDate; // 회수 예정일
-    private String request; // 요청사항
-    private String invoiceNum; // 송장번호
-
-    @Enumerated(EnumType.STRING)
-    private ClaimReturnType returnType; // 회수 상태
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal returnFee; // 반품비
-
 
     private Long handledBy;
 

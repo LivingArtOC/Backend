@@ -17,7 +17,8 @@ import java.util.Map;
 @NoArgsConstructor
 public class InteriorInfoResponse {
     private String email;
-    private String paxNum;
+    private String faxNum;
+    private String counselNum;
     private String directions;
     private String usageGuide;
     private List<ImageListDto> imageList;
