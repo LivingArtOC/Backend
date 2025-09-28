@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import software.amazon.awssdk.services.ses.endpoints.internal.Value;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -725,6 +726,71 @@ public class OrderService {
                 .status(claim.getClaimReqStatus())
                 .changedAt(changedAt)
                 .build();
+    }
+
+    public ClaimDetailResponse getClaimDetail(CustomUserDetails customUserDetails, Long claimId){
+        globalService.validateAdmin(customUserDetails);
+
+        OrderClaim claim = orderClaimRepository.findById(claimId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLAIM_NOT_FOUND));
+
+        String acc = userRepository.findById(claim.getUserId())
+                .map(user -> {
+                    String accNum = user.getRefundAccNum();
+                    String bank = user.getRefundBank();
+
+                    return (accNum != null && bank != null) ? accNum + "  " + bank : "-";
+                })
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return ClaimDetailResponse.builder()
+                .claimId(claimId)
+                .requestType(claim.getRequestType())
+                .invoiceNum(claim.getInvoiceNum())
+                .returnType(claim.getReturnType())
+                .returnDate(claim.getReturnDate())
+                .request(claim.getRequest())
+                .paid(claim.getOrderItem().getFinalPrice())
+                .couponDiscount(claim.getOrderItem().getSalePrice().subtract(claim.getOrderItem().getFinalPrice()))
+                .deliveryFee(BigDecimal.ZERO)
+                .returnFee(claim.getReturnFee())
+                .refundAcc(acc)
+                .build();
+    }
+
+    @Transactional
+    public ClaimDetailResponse updateClaimDetail(CustomUserDetails customUserDetails, ClaimDetailRequest request){
+        globalService.validateAdmin(customUserDetails);
+
+        OrderClaim claim = orderClaimRepository.findById(request.getClaimId())
+                .orElseThrow(() -> new CustomException(ErrorCode.CLAIM_NOT_FOUND));
+
+        claim.update(request.getInvoiceNum(), request.getReturnType(), request.getReturnDate(), request.getRequest(), request.getReturnFee(), customUserDetails.getId());
+        OrderClaim saved = orderClaimRepository.save(claim);
+
+        String acc = userRepository.findById(saved.getUserId())
+                .map(user -> {
+                    String accNum = user.getRefundAccNum();
+                    String bank = user.getRefundBank();
+
+                    return (accNum != null && bank != null) ? accNum + "  " + bank : "-";
+                })
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return ClaimDetailResponse.builder()
+                .claimId(saved.getId())
+                .requestType(saved.getRequestType())
+                .invoiceNum(saved.getInvoiceNum())
+                .returnType(saved.getReturnType())
+                .returnDate(saved.getReturnDate())
+                .request(saved.getRequest())
+                .paid(saved.getOrderItem().getFinalPrice())
+                .couponDiscount(saved.getOrderItem().getSalePrice().subtract(saved.getOrderItem().getFinalPrice()))
+                .deliveryFee(BigDecimal.ZERO)
+                .returnFee(saved.getReturnFee())
+                .refundAcc(acc)
+                .build();
+        
     }
 
 
