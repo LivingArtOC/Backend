@@ -7,5 +7,5 @@ import lombok.Getter;
 public class PfSearchRequest {
     private PfSearchKey key;
     private String keyword;
-    private DateSearchDto registerDate;
+    private DateSearchDto deliveryDate;
 }

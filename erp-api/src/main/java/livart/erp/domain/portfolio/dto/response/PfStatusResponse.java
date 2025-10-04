@@ -18,6 +18,5 @@ public class PfStatusResponse {
     private String concept;
     private String description;
     private PortfolioStatus status;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDate deliveryDate;
 }

@@ -50,8 +50,7 @@ public class PortfolioService {
                 .concept(request.getConcept())
                 .status(PortfolioStatus.TEMPORARY_STORAGE)
                 .description(request.getDescription())
-                .registerStartDate(request.getRegisterDate().getStartDate())
-                .registerEndDate(request.getRegisterDate().getEndDate())
+                .deliveryDate(request.getDeliveryDate())
                 .createdBy(customUserDetails.getId())
                 .build();
 
@@ -120,7 +119,7 @@ public class PortfolioService {
         portfolioItemRepository.deleteItemsByPortfolioId(portfolioId);
         portfolioImageRepository.deleteImagesByPortfolioId(portfolioId);
 
-        portfolio.update(request.getCompanyName(), request.getLocation(), request.getConcept(), request.getDescription(), request.getRegisterDate().getStartDate(), request.getRegisterDate().getEndDate(), customUserDetails.getId());
+        portfolio.update(request.getCompanyName(), request.getLocation(), request.getConcept(), request.getDescription(), request.getDeliveryDate(), customUserDetails.getId());
 
         List<PortfolioItem> portfolioItems = request.getItemList().stream()
                 .map(r -> {
@@ -214,18 +213,13 @@ public class PortfolioService {
                         Comparator.nullsLast(Integer::compareTo))
                 ).collect(Collectors.toList());
 
-        DateSearchDto date = DateSearchDto.builder()
-                .startDate(portfolio.getRegisterStartDate())
-                .endDate(portfolio.getRegisterEndDate())
-                .build();
-
         return PfResponse.builder()
                 .portfolioId(portfolio.getId())
                 .companyName(portfolio.getCompanyName())
                 .location(portfolio.getLocation())
                 .concept(portfolio.getConcept())
                 .description(portfolio.getDescription())
-                .registerDate(date)
+                .deliveryDate(portfolio.getDeliveryDate())
                 .imageList(imageResponses)
                 .itemList(itemResponses)
                 .build();
@@ -252,8 +246,7 @@ public class PortfolioService {
                             .description(p.getDescription())
                             .location(p.getLocation())
                             .concept(p.getConcept())
-                            .startDate(p.getRegisterStartDate())
-                            .endDate(p.getRegisterEndDate())
+                            .deliveryDate(p.getDeliveryDate())
                             .build();
                 }).collect(Collectors.toList());
     }
@@ -281,12 +274,12 @@ public class PortfolioService {
             }
         }
 
-        if (request.getRegisterDate() != null) {
-            if (request.getRegisterDate().getStartDate() != null) {
-                builder.and(portfolio.registerStartDate.goe(request.getRegisterDate().getStartDate()));
+        if (request.getDeliveryDate() != null) {
+            if (request.getDeliveryDate().getStartDate() != null) {
+                builder.and(portfolio.deliveryDate.goe(request.getDeliveryDate().getStartDate()));
             }
-            if (request.getRegisterDate().getEndDate() != null) {
-                builder.and(portfolio.registerEndDate.loe(request.getRegisterDate().getEndDate()));
+            if (request.getDeliveryDate().getEndDate() != null) {
+                builder.and(portfolio.deliveryDate.loe(request.getDeliveryDate().getEndDate()));
             }
         }
 
@@ -320,8 +313,7 @@ public class PortfolioService {
                         portfolio.location,
                         portfolio.description,
                         portfolio.status,
-                        portfolio.registerStartDate,
-                        portfolio.registerEndDate
+                        portfolio.deliveryDate
                 )
                 .from(portfolio)
                 .leftJoin(portfolio.portfolioImages, portfolioImage)
@@ -343,8 +335,7 @@ public class PortfolioService {
                             .description(r.get(portfolio.description))
                             .location(r.get(portfolio.location))
                             .status(r.get(portfolio.status))
-                            .startDate(r.get(portfolio.registerStartDate))
-                            .endDate(r.get(portfolio.registerEndDate))
+                            .deliveryDate(r.get(portfolio.deliveryDate))
                             .build();
                 }).collect(Collectors.toList());
 
@@ -387,12 +378,12 @@ public class PortfolioService {
             }
         }
 
-        if (request.getRegisterDate() != null) {
-            if (request.getRegisterDate().getStartDate() != null) {
-                builder.and(portfolio.registerStartDate.goe(request.getRegisterDate().getStartDate()));
+        if (request.getDeliveryDate() != null) {
+            if (request.getDeliveryDate().getStartDate() != null) {
+                builder.and(portfolio.deliveryDate.goe(request.getDeliveryDate().getStartDate()));
             }
-            if (request.getRegisterDate().getEndDate() != null) {
-                builder.and(portfolio.registerEndDate.loe(request.getRegisterDate().getEndDate()));
+            if (request.getDeliveryDate().getEndDate() != null) {
+                builder.and(portfolio.deliveryDate.loe(request.getDeliveryDate().getEndDate()));
             }
         }
 

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter @Builder
@@ -17,7 +18,7 @@ public class PfResponse {
     private String location;
     private String concept;
     private String description;
-    private DateSearchDto registerDate;
+    private LocalDate deliveryDate;
     private List<PfItemResponse> itemList;
     private List<PfImageResponse> imageList;
 }

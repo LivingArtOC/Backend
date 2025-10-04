@@ -1,4 +1,4 @@
-package livart.shop.domain.order.dto;
+package livart.shop.domain.order;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
