@@ -1,4 +1,4 @@
-package livart.shop.domain.order.dto;
+package livart.shop.domain.order;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

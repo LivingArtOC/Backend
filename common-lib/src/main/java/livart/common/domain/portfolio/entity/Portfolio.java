@@ -27,8 +27,7 @@ public class Portfolio extends BaseTime {
 
     @Lob
     private String description;
-    private LocalDate registerStartDate;
-    private LocalDate registerEndDate;
+    private LocalDate deliveryDate;
     private Long createdBy;
     private Long updatedBy;
 
@@ -48,13 +47,12 @@ public class Portfolio extends BaseTime {
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PortfolioDisplay> portfolioDisplays = new ArrayList<>();
 
-    public void update(String companyName, String location, String concept, String description, LocalDate registerStartDate, LocalDate registerEndDate, Long updatedBy){
+    public void update(String companyName, String location, String concept, String description, LocalDate deliveryDate, Long updatedBy){
         this.companyName = companyName;
         this.location = location;
         this.concept = concept;
         this.description = description;
-        this.registerStartDate = registerStartDate;
-        this.registerEndDate = registerEndDate;
+        this.deliveryDate = deliveryDate;
         this.updatedBy = updatedBy;
     }
 
