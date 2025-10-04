@@ -80,7 +80,7 @@ public class ProductController {
     @PutMapping("/out-stock")
     @Operation(summary = "✅ 상품들 품절 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<ProductStockResponse>>> updateOutStock(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                                  @RequestBody IdListRequest request){
+                                                                                  @RequestBody List<IdListRequest> request){
         List<ProductStockResponse> response = productService.updateOutStock(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -88,7 +88,7 @@ public class ProductController {
     @PutMapping("/in-stock")
     @Operation(summary = "✅ 상품들 정상(재입고) 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<ProductStockResponse>>> updateInStock(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                                  @RequestBody IdListRequest request){
+                                                                                  @RequestBody List<IdListRequest> request){
         List<ProductStockResponse> response = productService.updateInStock(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -96,7 +96,7 @@ public class ProductController {
     @PutMapping("/soft-delete")
     @Operation(summary = "✅ 상품들 삭제 처리(소프트 삭제) API, 토큰 O")
     public ResponseEntity<ApiResponse<List<ProductDeactiveResponse>>> updateDeactivate(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                                              @RequestBody IdListRequest request){
+                                                                                              @RequestBody List<IdListRequest> request){
         List<ProductDeactiveResponse> response = productService.updateDeactivate(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -104,7 +104,7 @@ public class ProductController {
     @PutMapping("/restore")
     @Operation(summary = "✅ 상품들 복구 처리 API, 토큰 O")
     public ResponseEntity<ApiResponse<List<ProductDeactiveResponse>>> updateRestore(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                                       @RequestBody IdListRequest request){
+                                                                                       @RequestBody List<IdListRequest> request){
         List<ProductDeactiveResponse> response = productService.updateRestore(customUserDetails, request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
