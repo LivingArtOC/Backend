@@ -31,6 +31,8 @@ public enum ErrorCode {
     INVALID_EMAIL_SETTING(HttpStatus.BAD_REQUEST, "잘못된 EMAIL 설정 입력값입니다."),
     INVALID_SEND_TARGET(HttpStatus.BAD_REQUEST, "잘못된 발송 대상입니다."),
     INVALID_IMAGE_SIZE(HttpStatus.BAD_REQUEST, "잘못된 이미지 개수 입니다."),
+    INVALID_SORT_PARAM_VARIABLES(HttpStatus.BAD_REQUEST, "잘못된 정렬 변수가 주소 값으로 들어왔습니다."),
+    INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "PRODUCT"),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),

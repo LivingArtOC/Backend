@@ -47,4 +47,5 @@ public class ProductRegisterResponse {
     private Integer deliveryPrice;
     private List<ProductGuideInfoResponse> productGuideInfos;
     private LocalDateTime createdAt;
+    private List<ProductCouponResponse> couponResponses;
 }

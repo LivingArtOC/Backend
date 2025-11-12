@@ -103,7 +103,7 @@ public class PortfolioController {
     public ResponseEntity<ApiResponse<SearchResult<PfDisplayResponse>>> getDisplayPf(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody PfSearchRequest request,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
+            @PageableDefault(page = 0, size = 100, sort = "createdAt",direction = Sort.Direction.DESC)
             @Parameter(hidden = true) Pageable pageable) {
 
         SearchResult<PfDisplayResponse> response = portfolioService.getDisplayPf(customUserDetails, request, pageable);

@@ -1,6 +1,7 @@
 package livart.erp.domain.support.quotation;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.product.entity.*;
@@ -18,6 +19,7 @@ import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
 import livart.common.dto.request.QuotationRequest;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.support.quotation.dto.request.QuotationSearchRequest;
 import livart.erp.domain.support.quotation.dto.response.*;
 import lombok.RequiredArgsConstructor;
@@ -526,11 +528,12 @@ public class QuotationService {
                 builder.and(qQuotation.createdAt.loe(request.getRegisterDate().getEndDate().atTime(23,59,59)));
             }
         }
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, Quotation.class, "qQuotation");
 
         List<Quotation> quotation = jpaQueryFactory
                 .selectFrom(qQuotation)
                 .where(builder)
-                .orderBy(qQuotation.createdAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

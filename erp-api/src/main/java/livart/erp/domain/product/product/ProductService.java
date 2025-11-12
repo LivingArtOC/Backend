@@ -3,12 +3,20 @@ package livart.erp.domain.product.product;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.*;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.product.entity.*;
 import livart.common.domain.product.repository.*;
+import livart.common.domain.promotion.entity.Coupon;
+import livart.common.domain.promotion.entity.QCoupon;
+import livart.common.domain.promotion.repository.CouponRepository;
+import livart.common.dto.enums.coupon.*;
 import livart.common.dto.enums.product.*;
 import livart.common.dto.request.ProductRegisterRequest;
 import livart.common.exception.CustomException;
@@ -25,6 +33,8 @@ import livart.erp.domain.product.productImage.ProductImageResponse;
 import livart.erp.domain.product.productColor.ProductColorService;
 import livart.erp.domain.product.productGuide.ProductGuideInfoService;
 import livart.erp.domain.product.productImage.ProductImageService;
+import livart.erp.domain.promotion.dto.request.CouponSearchRequest;
+import livart.erp.domain.promotion.dto.response.CouponSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -56,6 +66,8 @@ public class ProductService {
     private final CategoryDisplayRepository categoryDisplayRepository;
     private final ProductImageRepository productImageRepository;
     private final OptionRepository optionRepository;
+    private final CouponRepository couponRepository;
+    private final ProductCouponRepository productCouponRepository;
     @Transactional
     public ProductRegisterResponse registerProduct(CustomUserDetails customUserDetails, ProductRegisterRequest request) {
         globalService.validateAdmin(customUserDetails);
@@ -105,7 +117,23 @@ public class ProductService {
 
         Product saved = productRepository.save(savedProduct);
 
-        return toProductResponse(saved, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
+        List<Coupon> couponList = couponRepository.findAllById(request.getCouponIdList());
+        List<ProductCoupon> productCoupons = couponList.stream()
+                .map(coupon -> ProductCoupon.builder()
+                        .coupon(coupon)
+                        .product(savedProduct)
+                        .build()
+                ).collect(Collectors.toList());
+
+        List<ProductCouponResponse> couponResponses = productCouponRepository.saveAll(productCoupons)
+                .stream()
+                .map(pc -> ProductCouponResponse.builder()
+                        .couponName(pc.getCoupon().getCouponName())
+                        .discountRate(getDiscountRateText(savedProduct, pc.getCoupon()))
+                        .build()
+                ).collect(Collectors.toList());
+
+        return toProductResponse(saved, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos, couponResponses);
 
     }
 
@@ -128,7 +156,17 @@ public class ProductService {
         List<ProductGuideInfoResponse> productGuideInfos =
                 productGuideInfoService.getProductGuideInfo(customUserDetails, product);
 
-        return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
+        List<ProductCoupon> productCoupons = productCouponRepository.findAllByProduct(product);
+
+        List<ProductCouponResponse> couponResponses = productCoupons
+                .stream()
+                .map(pc -> ProductCouponResponse.builder()
+                        .couponName(pc.getCoupon().getCouponName())
+                        .discountRate(getDiscountRateText(product, pc.getCoupon()))
+                        .build()
+                ).collect(Collectors.toList());
+
+        return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos, couponResponses);
     }
 
     @Transactional
@@ -170,7 +208,25 @@ public class ProductService {
         List<ProductGuideInfoResponse> productGuideInfos =
                 productGuideInfoService.updateProductGuideInfo(customUserDetails, product, request.getProductGuideInfos());
 
-        return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos);
+        productCouponRepository.deleteAllByProduct(product);
+
+        List<Coupon> couponList = couponRepository.findAllById(request.getCouponIdList());
+        List<ProductCoupon> productCoupons = couponList.stream()
+                .map(coupon -> ProductCoupon.builder()
+                        .coupon(coupon)
+                        .product(product)
+                        .build()
+                ).collect(Collectors.toList());
+
+        List<ProductCouponResponse> couponResponses = productCouponRepository.saveAll(productCoupons)
+                .stream()
+                .map(pc -> ProductCouponResponse.builder()
+                        .couponName(pc.getCoupon().getCouponName())
+                        .discountRate(getDiscountRateText(product, pc.getCoupon()))
+                        .build()
+                ).collect(Collectors.toList());
+
+        return toProductResponse(product, productColors, detailedOptionResponses, combinationResponses, productImages, productGuideInfos, couponResponses);
     }
 
     private ProductRegisterResponse toProductResponse(Product product,
@@ -178,7 +234,8 @@ public class ProductService {
                                                       List<DetailedOptionResponse> detailedOptionResponses,
                                                       List<OptionCombinationResponse> combinationResponses,
                                                       List<ProductImageResponse> productImages,
-                                                      List<ProductGuideInfoResponse> productGuideInfos) {
+                                                      List<ProductGuideInfoResponse> productGuideInfos,
+                                                      List<ProductCouponResponse> couponResponses) {
 
         return ProductRegisterResponse.builder()
                 .productId(product.getId())
@@ -205,6 +262,7 @@ public class ProductService {
                 .deliveryType(product.getDeliveryType())
                 .productGuideInfos(productGuideInfos)
                 .createdAt(product.getCreatedAt())
+                .couponResponses(couponResponses)
                 .build();
     }
 
@@ -933,6 +991,109 @@ public class ProductService {
                 .build();
     }
 
+    public List<ProductCouponSearchResponse> getProductCoupon(CustomUserDetails customUserDetails, Long productId){
+        globalService.validateAdmin(customUserDetails);
+
+        Optional<Product> optionalProduct = productRepository.findById(productId);
+        if (optionalProduct.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ProductCoupon> productCoupons = productCouponRepository.findAllByProduct(optionalProduct.get());
+
+        return productCoupons.stream()
+                .map(pc -> ProductCouponSearchResponse.builder()
+                        .couponId(pc.getCoupon().getId())
+                        .couponName(pc.getCoupon().getCouponName())
+                        .discountRate(getDiscountRateText(pc.getCoupon()))
+                        .isIncluded(true)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public SearchResult<ProductCouponSearchResponse> getCouponList(CustomUserDetails customUserDetails,
+                                                            ProductCouponRequest request,
+                                                            Pageable pageable) {
+        globalService.validateAdmin(customUserDetails);
+
+        QCoupon coupon = QCoupon.coupon;
+        BooleanBuilder builder = new BooleanBuilder()
+                .and(coupon.issuedStatus.eq(IssuedStatus.ACTIVE))
+                .and(coupon.couponType.eq(CouponType.PRODUCT));
+
+        if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
+            switch (request.getKey()) {
+                case COUPON_NAME -> builder.and(coupon.couponName.containsIgnoreCase(request.getKeyword()));
+                case CODE -> builder.and(coupon.code.containsIgnoreCase(request.getKeyword()));
+                case ALL -> {
+                    BooleanBuilder keywordBuilder = new BooleanBuilder();
+                    keywordBuilder.or(coupon.couponName.containsIgnoreCase(request.getKeyword()));
+                    keywordBuilder.or(coupon.code.containsIgnoreCase(request.getKeyword()));
+                    builder.and(keywordBuilder);
+                }
+            }
+        }
+
+        if (request.getCouponRegister() != null) {
+            if (request.getCouponRegister().getStartDate() != null) {
+                builder.and(coupon.createdAt.goe(request.getCouponRegister().getStartDate().atStartOfDay()));
+            }
+            if (request.getCouponRegister().getEndDate() != null) {
+                builder.and(coupon.createdAt.loe(request.getCouponRegister().getEndDate().atTime(23, 59, 59)));
+            }
+        }
+
+        Set<Long> couponIdList = request.getProductId() != null
+                        ? new HashSet<>(productCouponRepository.findCouponIdsByProductId(request.getProductId()))
+                        : Collections.emptySet();
+
+        NumberExpression<Integer> includedOrder = request.getProductId() != null
+                        ? new CaseBuilder().when(coupon.id.in(couponIdList)).then(1).otherwise(0)
+                        : Expressions.asNumber(0);
+
+        OrderSpecifier<?>[] orderSpecifiers = request.getProductId() != null
+                ? new OrderSpecifier[]{includedOrder.desc(), coupon.createdAt.desc()}
+                : new OrderSpecifier[]{coupon.createdAt.desc()};
+
+        List<Coupon> couponList = queryFactory
+                .selectFrom(coupon)
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(orderSpecifiers)
+                .fetch();
+
+        Long totalCount = Optional.ofNullable(
+                queryFactory.select(coupon.count())
+                        .from(coupon)
+                        .where(builder)
+                        .fetchOne()
+        ).orElse(0L);
+
+        List<ProductCouponSearchResponse> data = couponList.stream()
+                .map(c -> ProductCouponSearchResponse.builder()
+                        .couponId(c.getId())
+                        .couponName(c.getCouponName())
+                        .discountRate(getDiscountRateText(c))
+                        .isIncluded(couponIdList.contains(c.getId()))
+                        .build())
+                .collect(Collectors.toList());
+
+        return SearchResult.<ProductCouponSearchResponse>builder()
+                .totalCount(totalCount)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .data(data)
+                .build();
+    }
+
+    private String getDiscountRateText(Coupon coupon) {
+        String discountRate = (coupon.getCouponDiscountType() == CouponDiscountType.FIXED)
+                ? coupon.getDiscountPrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "원"
+                : coupon.getDiscountPrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "%";
+        return discountRate;
+    }
+
     private ProductImage getThumbNail(Product product) {
         return product.getProductImages().stream()
                 .filter(p -> p.getImageType().equals(ImageType.THUMBNAIL_NUKKI))
@@ -959,6 +1120,26 @@ public class ProductService {
                 .setScale(2, RoundingMode.HALF_UP);
 
         return discountRate;
+    }
+
+    private String getDiscountRateText(Product product, Coupon coupon) {
+
+        if (product.getSalePrice() == null || coupon.getDiscountPrice() == null) {
+            return product.getSalePrice().toPlainString();
+        }
+
+        if(coupon.getCouponDiscountType() == CouponDiscountType.ALL){
+            return null;
+        } else if (coupon.getCouponDiscountType() == CouponDiscountType.FIXED) {
+            return coupon.getDiscountPrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "원";
+        }else {
+            BigDecimal hundred = new BigDecimal("100");
+            BigDecimal discount = product.getSalePrice()
+                    .multiply(coupon.getDiscountPrice())
+                    .divide(hundred, 0, RoundingMode.HALF_UP);
+            return discount + "원";
+        }
+
     }
 
 }

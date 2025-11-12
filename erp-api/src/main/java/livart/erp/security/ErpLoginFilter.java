@@ -185,7 +185,6 @@ public class ErpLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String xsrf = CsrfTokenUtil.generate();
 
-        // 4) 쿠키 발급 (CookieProps 주입 필요)
         var cd = cookieProps.domain();
         var secure = cookieProps.secure();
 

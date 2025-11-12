@@ -3,6 +3,7 @@ package livart.erp.domain.member;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -42,6 +43,7 @@ import livart.common.log.entity.MileageLog;
 import livart.common.log.entity.UserStatusLog;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.member.dto.request.*;
 import livart.erp.domain.member.dto.response.*;
 import lombok.RequiredArgsConstructor;
@@ -513,6 +515,8 @@ public class MemberService {
         Expression<Long> orderCountExpr =
                 Expressions.template(Long.class, "coalesce(count({0}), 0)", orders.id);
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, User.class, "user");
+
         JPQLQuery<MemberSearchResponse> query = jpaQueryFactory
                 .select(Projections.constructor(MemberSearchResponse.class,
                         user.id,
@@ -536,7 +540,7 @@ public class MemberService {
                 .groupBy(user.id, consumer.name, business.bizName, user.phoneNum,
                         user.loginId, user.role, user.provider, user.mileage,
                         user.createdAt, user.lastLoginAt, user.status)
-                .orderBy(user.createdAt.desc());
+                .orderBy(orderSpecifiers);
 
 
         if (min != null && max != null) {
@@ -816,6 +820,8 @@ public class MemberService {
             }
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, User.class, "user");
+
         List<DormantSearchResponse> results = jpaQueryFactory
                 .select(Projections.constructor(DormantSearchResponse.class,
                         user.id,
@@ -832,7 +838,7 @@ public class MemberService {
                 .leftJoin(consumer).on(consumer.id.eq(user.id))
                 .leftJoin(business).on(business.id.eq(user.id))
                 .where(builder)
-                .orderBy(user.createdAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -891,11 +897,13 @@ public class MemberService {
             builder.and(user.recoverable.eq(request.getRecoverable()));
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, User.class, "user");
+
         List<User> users = jpaQueryFactory
                 .selectFrom(user)
                 .leftJoin(user.userStatusLogs, statusLog).fetchJoin()
                 .where(builder)
-                .orderBy(user.createdAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

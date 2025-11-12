@@ -1,6 +1,9 @@
 package livart.erp.domain.alarm;
 
 import com.querydsl.core.BooleanBuilder;
+
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
@@ -13,10 +16,7 @@ import livart.common.client.sms.SmsSender;
 import livart.common.domain.alarm.entity.*;
 import livart.common.domain.alarm.repository.*;
 import livart.common.domain.order.entity.QOrder;
-import livart.common.domain.user.entity.QBusiness;
-import livart.common.domain.user.entity.QConsumer;
-import livart.common.domain.user.entity.QUser;
-import livart.common.domain.user.entity.User;
+import livart.common.domain.user.entity.*;
 import livart.common.dto.enums.alarm.*;
 import livart.common.dto.enums.user.Role;
 import livart.common.dto.enums.user.UserStatus;
@@ -30,12 +30,14 @@ import livart.common.log.repository.EmailLogRepository;
 import livart.common.log.repository.SmsLogRepository;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.alarm.dto.request.*;
 import livart.erp.domain.alarm.dto.response.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -361,6 +363,8 @@ public class AlarmService {
         Integer min = request.getOrderCount() != null ? request.getOrderCount().getStart() : null;
         Integer max = request.getOrderCount() != null ? request.getOrderCount().getEnd() : null;
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, User.class, "user");
+
         JPQLQuery<MemberSearchResponse> query = jpaQueryFactory
                 .select(Projections.constructor(MemberSearchResponse.class,
                         user.id,
@@ -381,7 +385,7 @@ public class AlarmService {
                 .groupBy(user.id, user.userName, user.email, user.phoneNum,
                         userMKConsent.emailNotice, userMKConsent.smsNotice,
                         user.loginId, user.role, user.status)
-                .orderBy(user.createdAt.desc());
+                .orderBy(orderSpecifiers);
 
 
         if (min != null && max != null) {
@@ -641,10 +645,12 @@ public class AlarmService {
             }
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, EmailLog.class, "emailLog");
+
         List<EmailLog> logs = jpaQueryFactory
                 .selectFrom(emailLog)
                 .where(builder)
-                .orderBy(emailLog.sentAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -933,15 +939,25 @@ public class AlarmService {
             builder.and(smsLog.status.eq(request.getStatus()));
         }
 
+        Sort.Order order = pageable.getSort().isEmpty()
+                ? new Sort.Order(Sort.Direction.DESC, "sendAt")  // 기본 정렬 기준
+                : pageable.getSort().iterator().next();           // 첫 번째 정렬 기준만 사용
+
+        boolean isAsc = order.isAscending();
+
         List<SmsLog> logs = jpaQueryFactory
                 .selectFrom(smsLog)
                 .where(builder)
                 .orderBy(
                         new CaseBuilder()
                                 .when(smsLog.sentAt.isNotNull()).then(1)
-                                .otherwise(0).desc(),
-                        smsLog.sentAt.desc().nullsLast(),
-                        smsLog.reservedAt.desc().nullsLast()
+                                .otherwise(0).desc(), // 이건 고정 (발송완료가 위로)
+                        isAsc
+                                ? smsLog.sentAt.asc().nullsLast()
+                                : smsLog.sentAt.desc().nullsLast(),
+                        isAsc
+                                ? smsLog.reservedAt.asc().nullsLast()
+                                : smsLog.reservedAt.desc().nullsLast()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import livart.common.domain.BaseTime;
 import livart.common.domain.address.entity.UserAddress;
 import livart.common.domain.member.entity.CouponLog;
+import livart.common.domain.product.entity.ProductCoupon;
 import livart.common.dto.enums.coupon.CouponDiscountType;
 import livart.common.dto.enums.coupon.CouponExpiration;
 import livart.common.dto.enums.coupon.CouponType;
@@ -64,6 +65,10 @@ public class Coupon extends BaseTime {
     @Builder.Default
     @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CouponLog> couponLogs = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductCoupon> productCoupons = new ArrayList<>();
 
     public void update(CouponRegisterRequest request, Long updatedBy){
         this.couponType = request.getCouponType();

@@ -1,17 +1,32 @@
 package livart.erp.domain.promotion;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import livart.common.Auth.CustomUserDetails;
+import livart.common.domain.product.entity.Product;
+import livart.common.domain.product.entity.ProductCoupon;
+import livart.common.domain.product.entity.QProduct;
+import livart.common.domain.product.entity.QProductImage;
+import livart.common.domain.product.repository.ProductCouponRepository;
+import livart.common.domain.product.repository.ProductRepository;
 import livart.common.domain.promotion.entity.*;
 import livart.common.domain.promotion.repository.*;
 import livart.common.dto.enums.coupon.*;
 import livart.common.dto.enums.design.CatalogType;
+import livart.common.dto.enums.product.ImageType;
+import livart.common.dto.enums.product.ProductStatus;
 import livart.common.dto.request.CouponRegisterRequest;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.erp.domain.product.product.dto.request.ProductAddRequest;
+import livart.erp.domain.product.product.dto.response.ProductAddSearchResponse;
+import livart.erp.domain.product.product.dto.response.ProductCouponSearchResponse;
 import livart.erp.domain.promotion.dto.request.*;
 import livart.erp.domain.promotion.dto.response.*;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -36,7 +52,9 @@ public class PromotionService {
     private final CouponAutoGrantRepository couponAutoGrantRepository;
     private final CouponAutoSettingRepository couponAutoSettingRepository;
     private final JPAQueryFactory queryFactory;
-    
+    private final ProductCouponRepository productCouponRepository;
+    private final ProductRepository productRepository;
+
     @Transactional
     public List<CatalogResponse> saveCatalog(CustomUserDetails customUserDetails, CatalogRequest request){
         globalService.validateAdmin(customUserDetails);
@@ -510,6 +528,113 @@ public class PromotionService {
                 ).collect(Collectors.toList());
     }
 
+    public List<CouponProductResponse> couponProductList(CustomUserDetails customUserDetails, Long couponId){
+        globalService.validateAdmin(customUserDetails);
 
+        List<Product> products = productCouponRepository.findProductsByCouponId(couponId);
+        return products.stream()
+                .map(product -> CouponProductResponse.builder()
+                        .productId(product.getId())
+                        .productCode(product.getProductCode())
+                        .productName(product.getProductName())
+                        .salePrice(product.getSalePrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "원")
+                        .isIncluded(true)
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public SearchResult<CouponProductResponse> addProductSearch(CustomUserDetails customUserDetails,
+                                                                   CouponProductSearchRequest request, Pageable pageable) {
+        globalService.validateAdmin(customUserDetails);
+
+        QProduct product = QProduct.product;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(product.productStatus.eq(ProductStatus.ACTIVE));
+
+        if (StringUtils.hasText(request.getKeyword()) && request.getKey() != null) {
+            switch (request.getKey()) {
+                case PRODUCT_CODE -> builder.and(product.productCode.containsIgnoreCase(request.getKeyword()));
+                case PRODUCT_NAME -> builder.and(product.productName.containsIgnoreCase(request.getKeyword()));
+                case ALL -> {
+                    BooleanBuilder keywordBuilder = new BooleanBuilder();
+                    keywordBuilder.or(product.productName.containsIgnoreCase(request.getKeyword()));
+                    keywordBuilder.or(product.productCode.containsIgnoreCase(request.getKeyword()));
+                    builder.and(keywordBuilder);
+                }
+            }
+        }
+
+        Set<Long> productIdList = productCouponRepository.findProductsByCouponId(request.getCouponId())
+                .stream()
+                .map(Product::getId)
+                .collect(Collectors.toSet());
+
+        NumberExpression<Integer> includedOrder = new CaseBuilder()
+                .when(product.id.in(productIdList)).then(1)
+                .otherwise(0);
+
+        List<Product> products = queryFactory
+                .selectFrom(product)
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(includedOrder.desc(), product.createdAt.desc())
+                .fetch();
+
+        Long totalCount = Optional.ofNullable(
+                queryFactory.select(product.count())
+                        .from(product)
+                        .where(builder)
+                        .fetchOne()
+        ).orElse(0L);
+
+        List<CouponProductResponse> data = products.stream()
+                .map(p -> CouponProductResponse.builder()
+                        .productId(p.getId())
+                        .productCode(p.getProductCode())
+                        .productName(p.getProductName())
+                        .salePrice(p.getSalePrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "원")
+                        .isIncluded(productIdList.contains(p.getId()))
+                        .build())
+                .collect(Collectors.toList());
+
+        return SearchResult.<CouponProductResponse>builder()
+                .totalCount(totalCount)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .data(data)
+                .build();
+    }
+
+    @Transactional
+    public List<CouponProductResponse> updateProductCoupon(CustomUserDetails customUserDetails, List<Long> productIdList, Long couponId){
+        globalService.validateAdmin(customUserDetails);
+
+        Coupon coupon = couponRepository.findById(couponId).orElseThrow(() -> new CustomException(ErrorCode.COUPON_NOT_FOUND));
+
+        productCouponRepository.deleteAllByCoupon(coupon);
+
+        List<Product> products = productRepository.findAllById(productIdList);
+        if (products.size() != productIdList.size()) {
+            throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        List<ProductCoupon> productCoupons = products.stream()
+                .map(p -> ProductCoupon.builder()
+                        .product(p)
+                        .coupon(coupon)
+                        .build()).collect(Collectors.toList());
+
+        return productCouponRepository.saveAll(productCoupons)
+                .stream()
+                .map(pc -> CouponProductResponse.builder()
+                        .productId(pc.getProduct().getId())
+                        .productCode(pc.getProduct().getProductCode())
+                        .productName(pc.getProduct().getProductName())
+                        .salePrice(pc.getProduct().getSalePrice().setScale(0, RoundingMode.HALF_UP).toPlainString() + "원")
+                        .isIncluded(true)
+                        .build()).collect(Collectors.toList());
+    }
 
 }

@@ -10,6 +10,8 @@ import livart.common.dto.response.ApiResponse;
 import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
+import livart.erp.domain.product.product.dto.request.ProductAddRequest;
+import livart.erp.domain.product.product.dto.response.ProductAddSearchResponse;
 import livart.erp.domain.promotion.dto.request.*;
 import livart.erp.domain.promotion.dto.response.*;
 import lombok.RequiredArgsConstructor;
@@ -131,6 +133,37 @@ public class PromotionController {
                                                                                        @PathVariable String status){
         IssuedStatus issuedStatus = parseIssuedStatus(status);
         List<CouponSearchResponse> result = promotionService.updateCouponStatus(customUserDetails, couponIdList, issuedStatus);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+
+    }
+
+    @GetMapping("/coupon/product/{couponId}")
+    @Operation(summary = "✅ 쿠폰 적용 상품 목록 API, 토큰 O")
+    public ResponseEntity<ApiResponse<List<CouponProductResponse>>> couponProductList(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable Long couponId){
+        List<CouponProductResponse> response = promotionService.couponProductList(customUserDetails, couponId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/coupon/product/search")
+    @Operation(summary = "✅ 쿠폰 적용 상품 추가 목적의 검색 API, 토큰 O")
+    public ResponseEntity<ApiResponse<SearchResult<CouponProductResponse>>> addProductSearch(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestBody CouponProductSearchRequest request,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = DESC)
+            @Parameter(hidden = true) Pageable pageable){
+
+        SearchResult<CouponProductResponse> response = promotionService.addProductSearch(customUserDetails, request, pageable);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PutMapping("/coupon/product/{couponId}")
+    @Operation(summary = "✅ 쿠폰 적용 상품 변경 API, 토큰 O")
+    public  ResponseEntity<ApiResponse<List<CouponProductResponse>>> updateProductCoupon(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                                       @RequestBody List<Long> productIdList,
+                                                                                       @PathVariable Long couponId){
+        List<CouponProductResponse> result = promotionService.updateProductCoupon(customUserDetails, productIdList, couponId);
         return ResponseEntity.ok(ApiResponse.ok(result));
 
     }

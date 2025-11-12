@@ -1,6 +1,7 @@
 package livart.erp.domain.support.estimate;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.product.entity.*;
@@ -17,6 +18,7 @@ import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.support.estimate.dto.request.EstimateProductRequest;
 import livart.erp.domain.support.estimate.dto.request.EstimateSearchRequest;
 import livart.erp.domain.support.estimate.dto.request.EstimateUpdateRequest;
@@ -81,10 +83,12 @@ public class EstimateService {
             }
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, Estimate.class, "estimate");
+
         List<Estimate> estimates = jpaQueryFactory
                 .selectFrom(estimate)
                 .where(builder)
-                .orderBy(estimate.visitDate.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
