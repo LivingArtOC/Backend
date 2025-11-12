@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Service
+@Service("designBrandService")
 @RequiredArgsConstructor
 public class BrandService {
 

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@Service
+@Service("designFaqService")
 @Transactional(readOnly = true)
 public class FaqService {
 
