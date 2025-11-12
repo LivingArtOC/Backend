@@ -32,13 +32,7 @@ import java.util.List;
 public class AuthController {
 
     private final AuthService authService;
-
-    @GetMapping("/")
-    @Operation(summary = "배포 테스트용 API", description = "테스트용 입니다.")
-    public String home() {
-        return "Welcome to the homepage!";
-    }
-
+    
     @PostMapping("/signup/consumer")
     @Operation(summary = "일반 회원가입 API", description = "토큰 X")
     public ResponseEntity<ApiResponse<SignupResponse>> consumerSignup(@RequestBody ConsumerSignupRequest consumerSignupRequest){

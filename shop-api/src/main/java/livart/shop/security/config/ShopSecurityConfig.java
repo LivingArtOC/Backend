@@ -70,7 +70,7 @@ public class ShopSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "api/shop/client/sms/**",
+                                "/api/shop/client/sms/**",
                                 "/api/shop/auth/**",
                                 "/swagger-ui/**",
                                 "/login/oauth2/**",

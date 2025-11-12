@@ -152,7 +152,7 @@ public class MemberController {
     public ResponseEntity<ApiResponse<SearchResult<DeleteSearchResponse>>> searchDeleteMember(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody DeleteSearchRequest request,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            @PageableDefault(page = 0, size = 10, sort = "deletedAt", direction = Sort.Direction.DESC)
             @Parameter(hidden = true) Pageable pageable){
 
         SearchResult<DeleteSearchResponse> response = memberService.searchDeleteMember(customUserDetails, request, pageable);

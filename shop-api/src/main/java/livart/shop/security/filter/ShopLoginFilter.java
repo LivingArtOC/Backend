@@ -110,14 +110,14 @@ public class ShopLoginFilter extends UsernamePasswordAuthenticationFilter {
         userRepository.save(user);
 
         String accessToken = jwtTokenProvider.generate(
-                String.valueOf(user.getId()), // loginId
+                String.valueOf(user.getLoginId()), // loginId
                 userDetails.getRole(),
                 userDetails.getProvider(),
                 new Date(System.currentTimeMillis() + jwtTokenProvider.getAccessExpiration())
         );
 
         String refreshToken = jwtTokenProvider.generate(
-                String.valueOf(user.getId()),
+                String.valueOf(user.getLoginId()),
                 userDetails.getRole(),
                 userDetails.getProvider(),
                 new Date(System.currentTimeMillis() + jwtTokenProvider.getRefreshExpiration())

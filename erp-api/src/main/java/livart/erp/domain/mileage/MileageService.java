@@ -1,6 +1,7 @@
 package livart.erp.domain.mileage;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.mileage.entity.MileageSetting;
@@ -15,6 +16,7 @@ import livart.common.log.repository.MileageLogRepository;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
 import livart.common.dto.request.MileageDefaultDto;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.mileage.dto.request.MileageSearchRequest;
 import livart.common.dto.request.MileageUsePayDto;
 import livart.erp.domain.mileage.dto.response.MileageSearchResponse;
@@ -139,6 +141,8 @@ public class MileageService {
         if(request.getType() != null && request.getType() != MileageType.ALL){
             builder.and(mileageLog.type.eq(request.getType()));
         }
+
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, MileageLog.class, "mileageLog");
 
         List<MileageLog> mileageLogs = jpaQueryFactory
                 .selectFrom(mileageLog)

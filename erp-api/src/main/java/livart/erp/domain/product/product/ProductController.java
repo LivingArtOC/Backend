@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import livart.common.Auth.CustomUserDetails;
+import livart.common.domain.product.entity.ProductCoupon;
 import livart.common.dto.request.ProductRegisterRequest;
 import livart.common.dto.response.ApiResponse;
 import livart.common.mapper.SearchResult;
@@ -13,6 +14,8 @@ import livart.erp.domain.product.excel.ExcelFieldResponse;
 import livart.erp.domain.product.excel.ExcelService;
 import livart.erp.domain.product.product.dto.request.*;
 import livart.erp.domain.product.product.dto.response.*;
+import livart.erp.domain.promotion.dto.request.CouponSearchRequest;
+import livart.erp.domain.promotion.dto.response.CouponSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.data.domain.Pageable;
@@ -135,7 +138,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<SearchResult<ProductDisplayResponse>>> getDisplay(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PathVariable Long categoryId,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = DESC)
+            @PageableDefault(page = 0, size = 100, sort = "createdAt", direction = DESC)
             @Parameter(hidden = true) Pageable pageable){
         SearchResult<ProductDisplayResponse> responses = productService.getDisplay(customUserDetails, categoryId, pageable);
         return ResponseEntity.ok(ApiResponse.ok(responses));
@@ -163,7 +166,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<SearchResult<ProductAddSearchResponse>>> addProductSearch(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody ProductAddRequest request,
-            @PageableDefault(page = 0, size = 100, sort = "createdAt", direction = DESC)
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = DESC)
             @Parameter(hidden = true) Pageable pageable){
 
         SearchResult<ProductAddSearchResponse> response = productService.addProductSearch(customUserDetails, request, pageable);
@@ -178,6 +181,25 @@ public class ProductController {
 
         ProductAddDto response = productService.getProductDetail(customUserDetails, productId);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/coupon/list/{productId}")
+    @Operation(summary = "✅ 해당 제품에 등록되어 있는 쿠폰 목록 조회")
+    public ResponseEntity<ApiResponse<List<ProductCouponSearchResponse>>> getProductCoupon(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                                           @PathVariable Long productId){
+        List<ProductCouponSearchResponse> response = productService.getProductCoupon(customUserDetails, productId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/coupon/search")
+    @Operation(summary = "✅ 쿠폰 목록 검색 API, 토큰 O")
+    public ResponseEntity<ApiResponse<SearchResult<ProductCouponSearchResponse>>> getProductCouponList(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestBody ProductCouponRequest request,
+            @PageableDefault(page = 0, size = 1000, sort = "createdAt", direction = DESC)
+            @Parameter(hidden = true) Pageable pageable){
+        SearchResult<ProductCouponSearchResponse> result = productService.getCouponList(customUserDetails, request, pageable);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @GetMapping("/excel/download")

@@ -1,6 +1,7 @@
 package livart.erp.domain.support.inquiry;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.support.inquiry.entity.Inquiry;
@@ -14,6 +15,7 @@ import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.support.inquiry.dto.request.AnswerRequest;
 import livart.erp.domain.support.inquiry.dto.request.InquirySearchRequest;
 import livart.erp.domain.support.inquiry.dto.response.InquiryImageResponse;
@@ -90,10 +92,12 @@ public class InquiryService {
             }
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, Inquiry.class, "inquiry");
+
         List<Inquiry> inquiryList = jpaQueryFactory
                 .selectFrom(inquiry)
                 .where(builder)
-                .orderBy(inquiry.questionAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

@@ -1,6 +1,7 @@
 package livart.erp.domain.defaultSetting.admin;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.servlet.http.HttpSession;
 import livart.common.Auth.CustomUserDetails;
@@ -24,6 +25,7 @@ import livart.common.log.repository.LoginHistoryRepository;
 import livart.common.log.repository.OtpLogRepository;
 import livart.common.service.GlobalService;
 import livart.common.mapper.SearchResult;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.defaultSetting.admin.dto.request.AdminLogSearchRequest;
 import livart.common.dto.request.user.AdminRequest;
 import livart.erp.domain.defaultSetting.admin.dto.request.AdminSearchRequest;
@@ -238,10 +240,12 @@ public class AdminService {
             builder.and(admin.smsNotiEnabled.eq(request.getSmsNotiEnabled()));
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, Admin.class, "admin");
+
         List<Admin> adminList = jpaQueryFactory
                 .selectFrom(admin)
                 .where(builder)
-                .orderBy(admin.createdAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

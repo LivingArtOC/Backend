@@ -1,6 +1,7 @@
 package livart.erp.domain.support.faq;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.support.faq.entity.FAQ;
@@ -11,6 +12,7 @@ import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.support.faq.dto.request.FAQRegisterRequest;
 import livart.erp.domain.support.faq.dto.request.FAQSearchRequest;
 import livart.erp.domain.support.faq.dto.request.FAQUpdateRequest;
@@ -137,11 +139,12 @@ public class FAQService {
                 builder.and(faq.questionAt.loe(request.getQuestionDate().getEndDate().atTime(23,59,59)));
             }
         }
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, FAQ.class, "faq");
 
         List<FAQ> faqList = jpaQueryFactory
                 .selectFrom(faq)
                 .where(builder)
-                .orderBy(faq.questionAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

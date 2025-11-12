@@ -60,7 +60,7 @@ public class FAQController {
     public ResponseEntity<ApiResponse<SearchResult<FAQResponse>>> searchFAQ(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody FAQSearchRequest request,
-            @PageableDefault(page = 0, size = 10, sort = "questionAt", direction = Sort.Direction.DESC)
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             @Parameter(hidden = true) Pageable pageable){
 
         SearchResult<FAQResponse> response = faqService.searchFAQ(customUserDetails, request, pageable);

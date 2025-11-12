@@ -88,7 +88,7 @@ public class DesignController {
     public ResponseEntity<ApiResponse<SearchResult<PopupResponse>>> searchPopupList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @ModelAttribute PopupSearchRequest request,
-            @PageableDefault(page = 0, size = 100, sort = "createdAt", direction = Sort.Direction.DESC)
+            @PageableDefault(page = 0, size = 500, sort = "createdAt", direction = Sort.Direction.DESC)
             @Parameter(hidden = true) Pageable pageable){
         SearchResult<PopupResponse> response = designService.searchPopupList(customUserDetails, request, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));

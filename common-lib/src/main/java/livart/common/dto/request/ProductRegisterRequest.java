@@ -34,5 +34,6 @@ public class ProductRegisterRequest {
     private String deliveryText;
     private Integer deliveryPrice;
     private List<ProductGuideInfoRequest> productGuideInfos;
+    private List<Long> couponIdList;
 }
 

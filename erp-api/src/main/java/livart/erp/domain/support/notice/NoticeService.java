@@ -1,6 +1,7 @@
 package livart.erp.domain.support.notice;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import livart.common.Auth.CustomUserDetails;
 import livart.common.domain.support.notice.entity.Notice;
@@ -13,6 +14,7 @@ import livart.common.exception.CustomException;
 import livart.common.exception.ErrorCode;
 import livart.common.mapper.SearchResult;
 import livart.common.service.GlobalService;
+import livart.common.util.QuerydslSortUtil;
 import livart.erp.domain.support.notice.dto.request.NoticeRegisterRequest;
 import livart.erp.domain.support.notice.dto.request.NoticeSearchRequest;
 import livart.erp.domain.support.notice.dto.request.NoticeUpdateRequest;
@@ -218,10 +220,12 @@ public class NoticeService {
             }
         }
 
+        OrderSpecifier<?>[] orderSpecifiers = QuerydslSortUtil.getOrderSpecifiers(pageable, Notice.class, "notice");
+
         List<Notice> notices = jpaQueryFactory
                 .selectFrom(notice)
                 .where(builder)
-                .orderBy(notice.createdAt.desc())
+                .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

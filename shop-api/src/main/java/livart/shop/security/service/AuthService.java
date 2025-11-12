@@ -141,7 +141,7 @@ public class AuthService {
                 .findFirst()
                 .orElse(null);
 
-        if (marketingConsent.equals(true) || marketingConsent.equals(false)) {
+        if (marketingConsent != null) {
             UserMKConsent consent = UserMKConsent.builder()
                     .smsNotice(marketingConsent)
                     .emailNotice(marketingConsent)
@@ -494,7 +494,7 @@ public class AuthService {
                 .userAgent(httpServletRequest.getHeader("User-Agent"))
                 .success(true)
                 .failReason(null)
-                .site("ERP")
+                .site("SHOP")
                 .createdAt(LocalDateTime.now())
                 .build());
 

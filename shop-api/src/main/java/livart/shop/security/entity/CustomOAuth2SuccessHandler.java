@@ -46,14 +46,14 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         userRepository.save(user);
 
         String accessToken = jwtTokenProvider.generate(
-                String.valueOf(user.getId()),
+                String.valueOf(user.getLoginId()),
                 user.getRole(),
                 user.getProvider(),
                 new Date(System.currentTimeMillis() + jwtTokenProvider.getAccessExpiration())
         );
 
         String refreshToken = jwtTokenProvider.generate(
-                String.valueOf(user.getId()),
+                String.valueOf(user.getLoginId()),
                 user.getRole(),
                 user.getProvider(),
                 new Date(System.currentTimeMillis() + jwtTokenProvider.getRefreshExpiration())
